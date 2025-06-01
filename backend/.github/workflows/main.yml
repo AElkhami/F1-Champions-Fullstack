@@ -1,0 +1,193 @@
+name: Spring Boot CI/CD Pipeline
+
+on:
+  pull_request:
+    branches: [ master ]
+
+env:
+  JAVA_VERSION: 17
+  IMAGE_NAME: ghcr.io/aelkhami/f1-champions:latest
+  DB_NAME: f1db
+  DB_USER: f1user
+  DB_PASSWORD: f1password
+
+jobs:
+
+  setup:
+    name: Setup Environment
+    runs-on: ubuntu-latest
+    outputs:
+      gradle-cache-key: ${{ steps.cache.outputs.cache-primary-key }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Cache Gradle
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+
+  lint:
+    name: Lint Check with Spotless
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Run Spotless Check
+        run: ./gradlew spotlessCheck
+
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: ${{ env.DB_NAME }}
+          POSTGRES_USER: ${{ env.DB_USER }}
+          POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Run Unit Tests
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/${{ env.DB_NAME }}
+          SPRING_DATASOURCE_USERNAME: ${{ env.DB_USER }}
+          SPRING_DATASOURCE_PASSWORD: ${{ env.DB_PASSWORD }}
+        run: ./gradlew test
+
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Build Project
+        run: ./gradlew compileJava
+
+      - name: Analyze with CodeQL
+        uses: github/codeql-action/analyze@v3
+
+  build:
+    name: Build JAR and Upload Artifact
+    runs-on: ubuntu-latest
+    needs: codeql
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Build Spring Boot App
+        run: ./gradlew bootJar
+
+      - name: Upload JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: springboot-jar
+          path: build/libs/*.jar
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download JAR Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: springboot-jar
+          path: ./release
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: "F1 Champions v1.0.${{ github.run_number }}"
+          body: |
+            🚀 Spring Boot build with code linting, tests, and release.
+          files: ./release/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.F1_DEPLOY_SECRET }}
+
+  dockerize:
+    name: Push Docker Image to GHCR
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download JAR Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: springboot-jar
+          path: build/libs
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: .docker/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}

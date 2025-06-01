@@ -1,0 +1,83 @@
+spring:
+  profiles:
+    active: dev #default value -> change from docker-compose.yml
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+  application:
+    name: f1-champions-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+
+  metrics:
+    enable:
+      resilience4j: true
+
+  health:
+    circuitbreakers:
+      enabled: true
+
+logging:
+  level:
+    root: DEBUG
+    com.elkhami.f1_champions: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    io.github.resilience4j: DEBUG
+
+f1:
+  api:
+    base-url: https://api.jolpi.ca/ergast/api/f1
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      champions-client:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 2
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+
+  ratelimiter:
+    instances:
+      champions-rate-limiter:
+        limitForPeriod: 1
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s
+
+  retry:
+    instances:
+      champions-retry:
+        maxAttempts: 3
+        waitDuration: 2s
+        retryExceptions:
+          - java.io.IOException
+          - org.springframework.web.reactive.function.client.WebClientRequestException
+          - org.springframework.web.reactive.function.client.WebClientResponseException$TooManyRequests

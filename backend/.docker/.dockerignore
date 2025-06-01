@@ -1,0 +1,18 @@
+# Ignore Gradle cache directories
+.gradle/
+**/build/
+
+# Ignore IDE and OS files
+*.iml
+.idea/
+.DS_Store
+
+# Ignore Git and CI metadata
+.git/
+.gitignore
+
+# DO NOT ignore JARs or build/libs so Docker can copy them
+# (do NOT include these — leave them out or comment them if they exist)
+# *.jar
+# build/libs/
+# ../build/

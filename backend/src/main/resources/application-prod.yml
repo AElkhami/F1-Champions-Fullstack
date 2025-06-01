@@ -1,0 +1,7 @@
+logging:
+  level:
+    root: INFO
+    com.elkhami.f1_champions: WARN
+    org.hibernate.SQL: OFF
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+    io.github.resilience4j: WARN
