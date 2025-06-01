@@ -1,20 +1,17 @@
 name: "CodeQL Android Analysis"
 
 on:
-  push:
-    branches: [ "master" ]
-    paths:
-      - 'frontend/**'
   pull_request:
     branches: [ "master" ]
     paths:
       - 'frontend/**'
+      - '.github/workflows/codeql-android.yml'
   schedule:
     - cron: '0 4 * * 1'  # Runs every Monday at 04:00 UTC
 
 jobs:
   analyze:
-    name: Analyze Android (${{ matrix.language }})
+    name: Analyze Android
     runs-on: ubuntu-latest
 
     permissions:
@@ -22,15 +19,6 @@ jobs:
       packages: read
       actions: read
       contents: read
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - language: java-kotlin
-            build-mode: autobuild
-          - language: actions
-            build-mode: none
 
     steps:
       - name: Checkout repository
@@ -42,13 +30,20 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
+          languages: java
+          build-mode: manual
+
+      - name: Build Android sources manually
+        run: ./gradlew compileDebugSources
+        working-directory: frontend
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{ matrix.language }}"
+          category: "/language:java"
