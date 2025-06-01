@@ -3,6 +3,10 @@ name: Spring Boot CI/CD Pipeline
 on:
   pull_request:
     branches: [ master ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-*.yml'
+      - 'infrastructure/backend/**'
 
 env:
   JAVA_VERSION: 17

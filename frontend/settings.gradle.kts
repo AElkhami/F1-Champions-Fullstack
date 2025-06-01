@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "F1 Champions"
+rootProject.name = "f1-champions-frontend"
 include(":app")
  
