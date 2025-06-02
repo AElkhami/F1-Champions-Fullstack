@@ -170,7 +170,7 @@ jobs:
           tag_name: v1.0.${{ github.run_number }}
           name: "F1 Champions v1.0.${{ github.run_number }}"
           body: |
-            🚀 Spring Boot build with code linting, tests, and release.
+            🚀 New build for testing.
           files: ./release/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.F1_DEPLOY_SECRET }}
