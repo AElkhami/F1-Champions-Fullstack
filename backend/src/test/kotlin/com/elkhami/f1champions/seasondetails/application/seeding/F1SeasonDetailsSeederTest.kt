@@ -97,4 +97,30 @@ class F1SeasonDetailsSeederTest {
             coVerify { seasonDetailsClient.fetchSeasonDetails(season) }
             verify(exactly = 0) { seasonDetailsService.saveSeasonDetails(any()) }
         }
+
+    @Test
+    fun `forceRefresh always fetches and saves season details`() =
+        runTest {
+            val year = 2023
+            val season = year.toString()
+
+            val detail =
+                SeasonDetail(
+                    season = season,
+                    round = "3",
+                    raceName = "Australian GP",
+                    date = "2023-04-02",
+                    winnerId = "verstappen",
+                    winnerName = "Max Verstappen",
+                    constructor = "Red Bull",
+                )
+
+            coEvery { seasonDetailsClient.fetchSeasonDetails(season) } returns listOf(detail)
+            every { seasonDetailsService.saveSeasonDetails(any()) } just Runs
+
+            seeder.forceRefresh(year)
+
+            coVerify { seasonDetailsClient.fetchSeasonDetails(season) }
+            verify { seasonDetailsService.saveSeasonDetails(match { it.winnerName == "Max Verstappen" }) }
+        }
 }

@@ -12,22 +12,45 @@ class AppStartupOrchestrator(
 ) {
     private val logger = loggerWithPrefix()
 
-    suspend fun seed(
+    suspend fun startUpSeed(
         fromYear: Int = 2005,
         toYear: Int = 2025,
     ) {
         for (year in fromYear..toYear) {
-            runCatching {
-                championSeeder.seedIfMissing(year)
-            }.onFailure {
-                logger.error("❌ Error seeding champion for year $year")
-            }
+            seedChampions(year)
+            seedSeasons(year)
+        }
+    }
 
-            runCatching {
-                seasonDetailsSeeder.seedIfMissing(year)
-            }.onFailure {
-                logger.error("❌ Error seeding season details for year $year")
-            }
+    suspend fun seedChampions(year: Int) {
+        runCatching {
+            championSeeder.seedIfMissing(year)
+        }.onFailure {
+            logger.error("❌ Error seeding champion for year $year")
+        }
+    }
+
+    suspend fun seedSeasons(year: Int) {
+        runCatching {
+            seasonDetailsSeeder.seedIfMissing(year)
+        }.onFailure {
+            logger.error("❌ Error seeding season details for year $year")
+        }
+    }
+
+    suspend fun refreshChampion(year: Int) {
+        runCatching {
+            championSeeder.forceRefresh(year)
+        }.onFailure {
+            logger.error("❌ Error refreshing champion for year $year")
+        }
+    }
+
+    suspend fun refreshSeasons(year: Int) {
+        runCatching {
+            seasonDetailsSeeder.forceRefresh(year)
+        }.onFailure {
+            logger.error("❌ Error refreshing season details for year $year")
         }
     }
 }

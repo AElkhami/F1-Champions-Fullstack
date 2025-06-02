@@ -2,20 +2,27 @@ package com.elkhami.f1champions.seasondetails.application
 
 import com.elkhami.f1champions.seasondetails.domain.SeasonDetailsRepository
 import com.elkhami.f1champions.seasondetails.intrastructure.db.entity.SeasonDetailsEntity
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.BeforeTest
+import org.springframework.cache.Cache
+import org.springframework.cache.CacheManager
 
 class F1SeasonDetailsServiceTest {
     private val seasonDetailsRepository = mockk<SeasonDetailsRepository>()
+    private val cacheManager = mockk<CacheManager>()
+    private val cache = mockk<Cache>(relaxed = true)
     private lateinit var service: F1SeasonDetailsService
 
-    @BeforeTest
+    @BeforeEach
     fun setup() {
-        service = F1SeasonDetailsService(seasonDetailsRepository)
+        every { cacheManager.getCache(F1SeasonDetailsService.SEASON_DETAILS_CACHE) } returns cache
+        service = F1SeasonDetailsService(seasonDetailsRepository, cacheManager)
     }
 
     @Test
@@ -23,7 +30,7 @@ class F1SeasonDetailsServiceTest {
         val season = "2020"
         val entity =
             SeasonDetailsEntity(
-                season = "2020",
+                season = season,
                 round = "1",
                 raceName = "Australian GP",
                 date = "2020-03-15",
@@ -46,7 +53,7 @@ class F1SeasonDetailsServiceTest {
         val season = "2021"
         val entity =
             SeasonDetailsEntity(
-                season = "2021",
+                season = season,
                 round = "2",
                 raceName = "Emilia Romagna GP",
                 date = "2021-04-18",
@@ -65,22 +72,25 @@ class F1SeasonDetailsServiceTest {
     }
 
     @Test
-    fun `saveSeasonDetails calls repository save`() {
+    fun `saveSeasonDetails calls repository save and evicts cache`() {
         val entity =
             SeasonDetailsEntity(
                 season = "2022",
                 round = "1",
                 raceName = "Bahrain GP",
                 date = "2022-03-20",
-                winnerId = "lechlerc",
+                winnerId = "leclerc",
                 winnerName = "Charles Leclerc",
                 constructor = "Ferrari",
             )
 
         every { seasonDetailsRepository.save(entity) } returns entity
+        every { cache.evict(entity.season) } just Runs
 
         service.saveSeasonDetails(entity)
 
         verify { seasonDetailsRepository.save(entity) }
+        verify { cacheManager.getCache(F1SeasonDetailsService.SEASON_DETAILS_CACHE) }
+        verify { cache.evict("2022") }
     }
 }

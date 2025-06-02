@@ -1,7 +1,8 @@
 package com.elkhami.f1champions.champions.infrastructure.api
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
 
 class ChampionsParserTest {
     @Test

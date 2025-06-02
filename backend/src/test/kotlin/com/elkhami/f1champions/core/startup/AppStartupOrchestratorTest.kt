@@ -33,7 +33,7 @@ class AppStartupOrchestratorTest {
             coEvery { championSeeder.seedIfMissing(any()) } returns Unit
             coEvery { seasonDetailsSeeder.seedIfMissing(any()) } returns Unit
 
-            orchestrator.seed(fromYear = fromYear, toYear = toYear)
+            orchestrator.startUpSeed(fromYear = fromYear, toYear = toYear)
 
             coVerify(exactly = 1) { championSeeder.seedIfMissing(2020) }
             coVerify(exactly = 1) { seasonDetailsSeeder.seedIfMissing(2020) }
@@ -56,12 +56,67 @@ class AppStartupOrchestratorTest {
 
             coEvery { seasonDetailsSeeder.seedIfMissing(any()) } returns Unit
 
-            orchestrator.seed(fromYear, toYear)
+            orchestrator.startUpSeed(fromYear, toYear)
 
             coVerify { championSeeder.seedIfMissing(2020) }
             coVerify { championSeeder.seedIfMissing(2021) }
 
             coVerify { seasonDetailsSeeder.seedIfMissing(2020) } // ✅ was called!
             coVerify { seasonDetailsSeeder.seedIfMissing(2021) }
+        }
+
+    @Test
+    fun `seedSeasons logs error when seeding season details fails`() =
+        runTest {
+            val year = 2025
+            coEvery { seasonDetailsSeeder.seedIfMissing(year) } throws RuntimeException("Failed to seed season details")
+
+            orchestrator.seedSeasons(year)
+
+            coVerify { seasonDetailsSeeder.seedIfMissing(year) }
+        }
+
+    @Test
+    fun `refreshChampion delegates to championSeeder forceRefresh`() =
+        runTest {
+            val year = 2023
+            coEvery { championSeeder.forceRefresh(year) } returns Unit
+
+            orchestrator.refreshChampion(year)
+
+            coVerify(exactly = 1) { championSeeder.forceRefresh(year) }
+        }
+
+    @Test
+    fun `refreshSeasons delegates to seasonDetailsSeeder forceRefresh`() =
+        runTest {
+            val year = 2023
+            coEvery { seasonDetailsSeeder.forceRefresh(year) } returns Unit
+
+            orchestrator.refreshSeasons(year)
+
+            coVerify(exactly = 1) { seasonDetailsSeeder.forceRefresh(year) }
+        }
+
+    @Test
+    fun `refreshChampion logs error when forceRefresh throws`() =
+        runTest {
+            val year = 2024
+            coEvery { championSeeder.forceRefresh(year) } throws RuntimeException("Boom!")
+
+            orchestrator.refreshChampion(year)
+
+            coVerify { championSeeder.forceRefresh(year) }
+        }
+
+    @Test
+    fun `refreshSeasons logs error when forceRefresh throws`() =
+        runTest {
+            val year = 2024
+            coEvery { seasonDetailsSeeder.forceRefresh(year) } throws RuntimeException("Boom!")
+
+            orchestrator.refreshSeasons(year)
+
+            coVerify { seasonDetailsSeeder.forceRefresh(year) }
         }
 }
