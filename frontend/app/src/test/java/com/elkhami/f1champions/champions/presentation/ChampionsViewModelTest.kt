@@ -4,7 +4,6 @@ import com.elkhami.f1champions.champions.domain.Champion
 import com.elkhami.f1champions.champions.domain.ChampionRepository
 import com.elkhami.f1champions.core.network.AppError
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
@@ -17,6 +16,9 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 
 /**
  * Created by A.Elkhami on 23/05/2025.
