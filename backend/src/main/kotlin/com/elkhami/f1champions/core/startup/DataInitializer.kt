@@ -19,7 +19,7 @@ class DataInitializer(
         logger.info("🚀 App started. Beginning data seeding...")
         scope.launch {
             try {
-                appStartupOrchestrator.seed()
+                appStartupOrchestrator.startUpSeed()
             } catch (e: Exception) {
                 logger.error("❌ Failed during seeding: ${e.message}")
             }

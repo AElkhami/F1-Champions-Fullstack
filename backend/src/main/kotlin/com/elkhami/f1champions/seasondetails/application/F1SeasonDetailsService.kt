@@ -1,18 +1,23 @@
 package com.elkhami.f1champions.seasondetails.application
 
+import com.elkhami.f1champions.core.logger.loggerWithPrefix
 import com.elkhami.f1champions.seasondetails.domain.SeasonDetailsRepository
 import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsService
 import com.elkhami.f1champions.seasondetails.intrastructure.db.entity.SeasonDetailsEntity
 import com.elkhami.f1champions.seasondetails.intrastructure.mapper.toDomain
+import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
 @Service
 class F1SeasonDetailsService(
     private val seasonDetailsRepository: SeasonDetailsRepository,
+    private val cacheManager: CacheManager,
 ) : SeasonDetailsService {
-    @Cacheable("seasonDetails")
+    val logger = loggerWithPrefix()
+
+    @Cacheable(SEASON_DETAILS_CACHE)
     override fun getSeasonDetails(season: String): List<SeasonDetail> {
         return seasonDetailsRepository.findBySeason(season).map { it.toDomain() }
     }
@@ -23,5 +28,16 @@ class F1SeasonDetailsService(
 
     override fun saveSeasonDetails(seasonDetailsEntity: SeasonDetailsEntity) {
         seasonDetailsRepository.save(seasonDetailsEntity)
+
+        evictSeasonCache(seasonDetailsEntity.season)
+    }
+
+    private fun evictSeasonCache(season: String) {
+        cacheManager.getCache(SEASON_DETAILS_CACHE)?.evict(season)
+        logger.info("🧹 Evicted cache for season: $season")
+    }
+
+    companion object {
+        const val SEASON_DETAILS_CACHE = "seasonDetails"
     }
 }

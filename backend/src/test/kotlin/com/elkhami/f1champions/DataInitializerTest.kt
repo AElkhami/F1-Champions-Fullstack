@@ -28,15 +28,15 @@ class DataInitializerTest {
         runTest {
             dataInitializer.onAppReady()
             testDispatcher.scheduler.advanceUntilIdle()
-            coVerify(exactly = 1) { appStartupOrchestrator.seed() }
+            coVerify(exactly = 1) { appStartupOrchestrator.startUpSeed() }
         }
 
     @Test
     fun `onAppReady should handle exception from dataSeeder seed`() =
         runTest {
-            coEvery { appStartupOrchestrator.seed() } throws RuntimeException("Test exception")
+            coEvery { appStartupOrchestrator.startUpSeed() } throws RuntimeException("Test exception")
             dataInitializer.onAppReady()
             testDispatcher.scheduler.advanceUntilIdle()
-            coVerify(exactly = 1) { appStartupOrchestrator.seed() }
+            coVerify(exactly = 1) { appStartupOrchestrator.startUpSeed() }
         }
 }

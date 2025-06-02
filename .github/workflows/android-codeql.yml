@@ -5,12 +5,10 @@ on:
     branches: [ "master" ]
     paths:
       - 'frontend/**'
-      - '.github/workflows/android-*.yml'
   pull_request:
     branches: [ "master" ]
     paths:
       - 'frontend/**'
-      - '.github/workflows/android-*.yml'
   schedule:
     - cron: '0 4 * * 1'  # Runs every Monday at 04:00 UTC
 

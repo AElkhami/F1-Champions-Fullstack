@@ -5,12 +5,10 @@ on:
     branches: [ master ]
     paths:
       - 'frontend/**'
-      - '.github/workflows/android-*.yml'
   pull_request:
     branches: [master]
     paths:
       - 'frontend/**'
-      - '.github/workflows/android-*.yml'
 
 env:
   JAVA_VERSION: 17

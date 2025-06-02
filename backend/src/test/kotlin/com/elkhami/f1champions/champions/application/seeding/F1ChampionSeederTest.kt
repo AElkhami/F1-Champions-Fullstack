@@ -89,4 +89,27 @@ class F1ChampionSeederTest {
             coVerify { championsClient.fetchChampion(year) }
             verify(exactly = 0) { championsService.saveChampion(any()) }
         }
+
+    @Test
+    fun `forceRefresh fetches and saves champion regardless of existence`() =
+        runTest {
+            val year = 2022
+            val season = year.toString()
+
+            val champion =
+                Champion(
+                    season = season,
+                    driverId = "leclerc",
+                    driverName = "Charles Leclerc",
+                    constructor = "Ferrari",
+                )
+
+            coEvery { championsClient.fetchChampion(year) } returns champion
+            every { championsService.saveChampion(any()) } just Runs
+
+            seeder.forceRefresh(year)
+
+            coVerify { championsClient.fetchChampion(year) }
+            verify { championsService.saveChampion(match { it.driverName == "Charles Leclerc" }) }
+        }
 }

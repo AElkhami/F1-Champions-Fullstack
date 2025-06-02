@@ -1,8 +1,8 @@
 package com.elkhami.f1champions.champions.infrastructure.mapper
 
 import com.elkhami.f1champions.champions.domain.model.Champion
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class ChampionsMapperTest {
     @Test

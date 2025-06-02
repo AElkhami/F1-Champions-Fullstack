@@ -3,8 +3,8 @@ package com.elkhami.f1champions.seasondetails.infrastructure.mapper
 import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
 import com.elkhami.f1champions.seasondetails.intrastructure.mapper.toDomain
 import com.elkhami.f1champions.seasondetails.intrastructure.mapper.toEntity
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class SeasonDetailsTest {
     @Test

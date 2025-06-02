@@ -1,8 +1,8 @@
 package com.elkhami.f1champions.seasondetails.infrastructure.api
 
 import com.elkhami.f1champions.seasondetails.intrastructure.api.SeasonDetailsParser
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class SeasonDetailsParserTest {
     @Test
