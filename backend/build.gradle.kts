@@ -62,6 +62,8 @@ dependencies {
 
     // Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+    // For Swagger web
+    implementation("org.springframework.boot:spring-boot-starter-web")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 

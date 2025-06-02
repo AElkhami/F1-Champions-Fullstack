@@ -7,7 +7,7 @@ import com.elkhami.f1champions.champions.infrastructure.db.entity.ChampionEntity
 import com.elkhami.f1champions.champions.infrastructure.mapper.toDomain
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
 import org.springframework.cache.CacheManager
-import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.CachePut
 import org.springframework.stereotype.Service
 
 @Service
@@ -17,7 +17,7 @@ class F1ChampionsService(
 ) : ChampionsService {
     val logger = loggerWithPrefix()
 
-    @Cacheable(CHAMPIONS_CACHE)
+    @CachePut(CHAMPIONS_CACHE)
     override fun getChampions(): List<Champion> {
         return championRepo.findAll().map { it.toDomain() }
     }
@@ -27,8 +27,15 @@ class F1ChampionsService(
     }
 
     override fun saveChampion(championEntity: ChampionEntity) {
-        championRepo.save(championEntity)
+        val existing = championRepo.findBySeason(championEntity.season)
+        val toSave =
+            existing?.copy(
+                driverId = championEntity.driverId,
+                driverName = championEntity.driverName,
+                constructor = championEntity.constructor,
+            ) ?: championEntity
 
+        championRepo.save(toSave)
         evictSeasonCache(championEntity.season)
     }
 

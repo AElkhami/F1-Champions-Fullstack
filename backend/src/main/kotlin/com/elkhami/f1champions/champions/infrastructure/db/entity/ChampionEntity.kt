@@ -4,11 +4,15 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import java.io.Serializable
 import java.util.UUID
 
 @Entity
-@Table(name = "champion_entity")
+@Table(
+    name = "champion_entity",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["season"])],
+)
 data class ChampionEntity(
     @Id
     val id: UUID = UUID.randomUUID(),

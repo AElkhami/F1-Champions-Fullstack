@@ -6,7 +6,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.verifyOrder
 import org.springframework.cache.Cache
 import org.springframework.cache.CacheManager
 import kotlin.test.BeforeTest
@@ -76,8 +76,16 @@ class F1ChampionsServiceTest {
     }
 
     @Test
-    fun `saveChampion calls repository save and evicts cache`() {
-        val entity =
+    fun `saveChampion checks for existing, saves updated entity, and evicts cache`() {
+        val existing =
+            ChampionEntity(
+                season = "2022",
+                driverId = "hamilton",
+                driverName = "Lewis Hamilton",
+                constructor = "Mercedes",
+            )
+
+        val updated =
             ChampionEntity(
                 season = "2022",
                 driverId = "leclerc",
@@ -85,13 +93,25 @@ class F1ChampionsServiceTest {
                 constructor = "Ferrari",
             )
 
-        every { championRepository.save(entity) } returns entity
-        every { cache.evict(entity.season) } just Runs
+        val expectedToSave =
+            existing.copy(
+                driverId = updated.driverId,
+                driverName = updated.driverName,
+                constructor = updated.constructor,
+            )
 
-        service.saveChampion(entity)
+        every { championRepository.findBySeason("2022") } returns existing
+        every { championRepository.save(expectedToSave) } returns expectedToSave
+        every { cacheManager.getCache(F1ChampionsService.CHAMPIONS_CACHE) } returns cache
+        every { cache.evict("2022") } just Runs
 
-        verify { championRepository.save(entity) }
-        verify { cacheManager.getCache(F1ChampionsService.CHAMPIONS_CACHE) }
-        verify { cache.evict("2022") }
+        service.saveChampion(updated)
+
+        verifyOrder {
+            championRepository.findBySeason("2022")
+            championRepository.save(expectedToSave)
+            cacheManager.getCache(F1ChampionsService.CHAMPIONS_CACHE)
+            cache.evict("2022")
+        }
     }
 }
