@@ -149,9 +149,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: "F1Champions v1.0.${{ github.run_number }}"
+          name: "f1-champions v1.0.${{ github.run_number }}"
           body: |
-            🏁 New debug APK build for testing.
+            🏁 New build for testing.
             - Built automatically from latest commit.
           files: ./release/f1champions-debug-v1.0.${{ github.run_number }}.apk
         env:
