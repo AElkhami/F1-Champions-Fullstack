@@ -5,4 +5,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "f1-champions"
+rootProject.name = "f1-champions-backend"

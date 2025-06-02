@@ -1,8 +1,18 @@
 name: Spring Boot CI/CD Pipeline
 
 on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-*.yml'
+      - 'infrastructure/backend/**'
   pull_request:
     branches: [ master ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-*.yml'
+      - 'infrastructure/backend/**'
 
 env:
   JAVA_VERSION: 17
@@ -52,6 +62,7 @@ jobs:
 
       - name: Run Spotless Check
         run: ./gradlew spotlessCheck
+        working-directory: backend
 
   test:
     name: Run Unit Tests
@@ -86,6 +97,7 @@ jobs:
           SPRING_DATASOURCE_USERNAME: ${{ env.DB_USER }}
           SPRING_DATASOURCE_PASSWORD: ${{ env.DB_PASSWORD }}
         run: ./gradlew test
+        working-directory: backend
 
   codeql:
     name: CodeQL Analysis
@@ -111,6 +123,7 @@ jobs:
 
       - name: Build Project
         run: ./gradlew compileJava
+        working-directory: backend
 
       - name: Analyze with CodeQL
         uses: github/codeql-action/analyze@v3
@@ -130,12 +143,13 @@ jobs:
 
       - name: Build Spring Boot App
         run: ./gradlew bootJar
+        working-directory: backend
 
       - name: Upload JAR Artifact
         uses: actions/upload-artifact@v4
         with:
           name: springboot-jar
-          path: build/libs/*.jar
+          path: backend/build/libs/*.jar
 
   release:
     name: Create GitHub Release
@@ -156,7 +170,7 @@ jobs:
           tag_name: v1.0.${{ github.run_number }}
           name: "F1 Champions v1.0.${{ github.run_number }}"
           body: |
-            🚀 Spring Boot build with code linting, tests, and release.
+            🚀 New build for testing.
           files: ./release/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.F1_DEPLOY_SECRET }}
@@ -172,7 +186,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: springboot-jar
-          path: build/libs
+          path: backend/build/libs
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -187,7 +201,7 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: .docker/Dockerfile
+          context: backend/
+          file: infrastructure/backend/.docker/Dockerfile
           push: true
           tags: ${{ env.IMAGE_NAME }}

@@ -2,9 +2,15 @@ name: Android CI Pipeline
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/android-*.yml'
   pull_request:
     branches: [master]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/android-*.yml'
 
 env:
   JAVA_VERSION: 17
@@ -48,6 +54,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Lint
         run: ./gradlew lint${{ env.BUILD_TYPE }}
+        working-directory: frontend
 
   test:
     name: Unit Tests
@@ -57,6 +64,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run tests
         run: ./gradlew test${{ env.BUILD_TYPE }}UnitTest
+        working-directory: frontend
 
   codeql:
     name: CodeQL Analysis
@@ -87,6 +95,7 @@ jobs:
 
       - name: Build project (custom build command)
         run: ./gradlew compileDebugSources
+        working-directory: frontend
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
@@ -109,12 +118,17 @@ jobs:
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug
+        working-directory: frontend
+
+      - name: Rename APK
+        run: |
+          mv frontend/app/build/outputs/apk/debug/app-debug.apk frontend/app/build/outputs/apk/debug/f1champions-debug-v1.0.${{ github.run_number }}.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: frontend/app/build/outputs/apk/debug/f1champions-debug-v1.0.${{ github.run_number }}.apk
 
   release:
     name: Create GitHub Release and Upload APK
@@ -135,10 +149,10 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: "F1Champions v1.0.${{ github.run_number }}"
+          name: "f1-champions v1.0.${{ github.run_number }}"
           body: |
-            🏁 New debug APK build for testing.
+            🏁 New build for testing.
             - Built automatically from latest commit.
-          files: ./release/app-debug.apk
+          files: ./release/f1champions-debug-v1.0.${{ github.run_number }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.F1_DEPLOY_SECRET }}

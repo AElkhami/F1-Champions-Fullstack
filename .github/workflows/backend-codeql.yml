@@ -1,0 +1,64 @@
+name: "CodeQL Backend Analysis"
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-*.yml'
+      - 'infrastructure/backend/**'
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-*.yml'
+      - 'infrastructure/backend/**'
+  schedule:
+    - cron: '0 3 * * 1'  # Runs every Monday at 03:00 UTC
+
+jobs:
+  analyze:
+    name: Analyze Backend (${{ matrix.language }})
+    runs-on: ubuntu-latest
+
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java
+            build-mode: manual
+          - language: actions
+            build-mode: none
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        if: matrix.language == 'java'
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Build Spring Boot sources
+        if: matrix.language == 'java'
+        run: ./gradlew compileJava
+        working-directory: backend
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

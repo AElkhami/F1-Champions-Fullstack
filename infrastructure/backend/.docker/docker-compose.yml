@@ -36,8 +36,8 @@ services:
 
   app:
     build:
-      context: ../
-      dockerfile: .docker/Dockerfile
+      context: ../../../backend
+      dockerfile: ../infrastructure/backend/.docker/Dockerfile
     container_name: f1-springboot-app
     depends_on:
       - db
