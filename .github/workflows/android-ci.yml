@@ -1,6 +1,11 @@
 name: Android CI Pipeline
 
 on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/android-*.yml'
   pull_request:
     branches: [master]
     paths:
@@ -115,11 +120,15 @@ jobs:
         run: ./gradlew assembleDebug
         working-directory: frontend
 
+      - name: Rename APK
+        run: |
+          mv frontend/app/build/outputs/apk/debug/app-debug.apk frontend/app/build/outputs/apk/debug/f1champions-debug-v1.0.${{ github.run_number }}.apk
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: frontend/app/build/outputs/apk/debug/app-debug.apk
+          path: frontend/app/build/outputs/apk/debug/f1champions-debug-v1.0.${{ github.run_number }}.apk
 
   release:
     name: Create GitHub Release and Upload APK
@@ -144,6 +153,6 @@ jobs:
           body: |
             🏁 New debug APK build for testing.
             - Built automatically from latest commit.
-          files: ./release/app-debug.apk
+          files: ./release/f1champions-debug-v1.0.${{ github.run_number }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.F1_DEPLOY_SECRET }}

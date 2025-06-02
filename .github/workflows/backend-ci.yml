@@ -1,6 +1,12 @@
 name: Spring Boot CI/CD Pipeline
 
 on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-*.yml'
+      - 'infrastructure/backend/**'
   pull_request:
     branches: [ master ]
     paths:
