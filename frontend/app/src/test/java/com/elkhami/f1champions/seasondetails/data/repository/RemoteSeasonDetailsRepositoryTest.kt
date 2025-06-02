@@ -6,10 +6,12 @@ import com.elkhami.f1champions.seasondetails.data.model.SeasonDetailsDto
 import com.elkhami.f1champions.seasondetails.data.remote.SeasonDetailsService
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.mockito.kotlin.whenever
 import retrofit2.HttpException
 import retrofit2.Response
