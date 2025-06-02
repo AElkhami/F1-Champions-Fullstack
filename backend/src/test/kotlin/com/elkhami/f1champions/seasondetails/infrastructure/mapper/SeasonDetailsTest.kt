@@ -6,7 +6,6 @@ import com.elkhami.f1champions.seasondetails.intrastructure.mapper.toEntity
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-
 class SeasonDetailsTest {
     @Test
     fun `RaceResult toEntity and back should preserve data`() {

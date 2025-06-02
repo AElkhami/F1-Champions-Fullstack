@@ -4,7 +4,6 @@ import com.elkhami.f1champions.seasondetails.intrastructure.api.SeasonDetailsPar
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-
 class SeasonDetailsParserTest {
     @Test
     fun `parseRaceWinners should return list of RaceResult`() {

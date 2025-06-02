@@ -3,7 +3,6 @@ package com.elkhami.f1champions.champions.infrastructure.api
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-
 class ChampionsParserTest {
     @Test
     fun `parseChampions should return list of Champion`() {

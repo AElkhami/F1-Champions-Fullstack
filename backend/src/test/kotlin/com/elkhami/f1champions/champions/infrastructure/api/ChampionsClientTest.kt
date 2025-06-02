@@ -15,7 +15,11 @@ import reactor.core.publisher.Mono
 import java.net.URI
 import java.time.Duration
 import java.util.function.Function
-import kotlin.test.*
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class ChampionsClientTest {
     private val webClient = mockk<WebClient>(relaxed = true)
