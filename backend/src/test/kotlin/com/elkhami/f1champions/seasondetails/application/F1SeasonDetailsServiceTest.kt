@@ -6,7 +6,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -72,7 +72,7 @@ class F1SeasonDetailsServiceTest {
     }
 
     @Test
-    fun `saveSeasonDetails calls repository save and evicts cache`() {
+    fun `saveSeasonDetails deletes by season and round, saves entity, and evicts cache`() {
         val entity =
             SeasonDetailsEntity(
                 season = "2022",
@@ -84,13 +84,18 @@ class F1SeasonDetailsServiceTest {
                 constructor = "Ferrari",
             )
 
+        every { seasonDetailsRepository.deleteBySeasonAndRound("2022", "1") } just Runs
         every { seasonDetailsRepository.save(entity) } returns entity
-        every { cache.evict(entity.season) } just Runs
+        every { cacheManager.getCache(F1SeasonDetailsService.SEASON_DETAILS_CACHE) } returns cache
+        every { cache.evict("2022") } just Runs
 
         service.saveSeasonDetails(entity)
 
-        verify { seasonDetailsRepository.save(entity) }
-        verify { cacheManager.getCache(F1SeasonDetailsService.SEASON_DETAILS_CACHE) }
-        verify { cache.evict("2022") }
+        verifyOrder {
+            seasonDetailsRepository.deleteBySeasonAndRound("2022", "1")
+            seasonDetailsRepository.save(entity)
+            cacheManager.getCache(F1SeasonDetailsService.SEASON_DETAILS_CACHE)
+            cache.evict("2022")
+        }
     }
 }
