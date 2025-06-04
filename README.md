@@ -36,23 +36,26 @@ Below are a few screens captured from the running Android application:
 
 ### 📱 Android
 
-| Area                         | Decision                                                                 |
-|------------------------------|--------------------------------------------------------------------------|
-| Jetpack Compose vs XML       | Adopted Jetpack Compose for modern UI, real-time previews, and less boilerplate. |
-| MVVM vs MVI                  | Chose MVI for deterministic state flow and better composability in Compose. |
-| mutableStateOf vs StateFlow  | Used `mutableStateOf` for simplicity and native to Compose. |
-| Single vs Multi-Module       | Single Module but organized by feature for easy modularization in the future.             |
-| Hilt vs Koin         | Hilt chosen for compile-time safety, ease of testing, and community support. |
+### 🤖 Android Architecture – Trade-off Analysis
+
+| Area                      | Chosen Option                  | Alternatives Considered     | Trade-offs                                                                 |
+|---------------------------|--------------------------------|-----------------------------|----------------------------------------------------------------------------|
+| UI Toolkit                | **Jetpack Compose**            | XML-based Views             | Enables declarative UI and real-time previews, but requires learning new patterns and APIs. |
+| State Management Pattern  | **MVI (Model–View–Intent)**    | MVVM                        | Provides predictable state flow and easier debugging, but increases boilerplate and complexity compared to MVVM. |
+| State Holder              | **`mutableStateOf`**           | `StateFlow`, `LiveData`     | Simple and Compose-native, but less suitable for shared or lifecycle-aware state across layers. |
+| Project Structure         | **Single module, feature-based** | Multi-module setup         | Keeps things simple for now while allowing future scalability, but lacks strict encapsulation between features. |
+| Dependency Injection      | **Hilt**                       | Koin                        | Compile-time safety, strong AndroidX support, and better tooling, but requires more setup and boilerplate annotations. |
+
 
 ### ☁️ Backend
 
-| Area                         | Decision                                                                 |
-|------------------------------|--------------------------------------------------------------------------|
-| WebFlux vs MVC               | WebFlux offers non-blocking IO and better scalability for async APIs.   |
-| Redis Caching                | Manual eviction preferred over TTL to avoid serving stale but “valid” data. |
-| Structured Logging           | Prefixed logger setup improves traceability across services.            |
-| Metrics & Monitoring         | Integrated Micrometer with Prometheus for real-time observability.     |
-| Dockerized Infrastructure    | Chosen for environment parity, easier onboarding, and service orchestration. |
+| Area                      | Chosen Option             | Alternatives Considered      | Trade-offs                                                                 |
+|---------------------------|---------------------------|-------------------------------|----------------------------------------------------------------------------|
+| Web Layer                 | **Spring WebFlux**        | Spring MVC                    | Offers non-blocking I/O and scalability for async APIs, but comes with a steeper learning curve and more complex debugging. |
+| Caching Strategy          | **Manual eviction**       | TTL-based expiration          | Provides precise control to prevent stale but “valid” data; however, it increases implementation complexity and maintenance effort. |
+| Logging                   | **Prefixed structured logging** | Plain or unstructured logging | Improves log traceability across services; setup is slightly more verbose and requires consistent tagging. |
+| Observability             | **Micrometer + Prometheus** | Custom metrics     | Open-source, flexible, and integrates well with Spring, but requires hosting Grafana and maintaining Prometheus infrastructure. |
+| Deployment & Environments| **Dockerized infrastructure** | Manual local setup, cloud-native tools | Ensures environment parity and simplifies onboarding, but adds overhead for simple setups and requires familiarity with Docker. |
 
 ---
 
@@ -61,7 +64,7 @@ Below are a few screens captured from the running Android application:
 On application startup, the backend triggers a seeding process that:
 - Fetches all champions from 2005 to the current year
 - Queries season details for each champion
-- Caches the results using Redis
+- Saves the results into PostgreSQL
 - Uses a custom orchestrator to coordinate this flow
 
 This ensures a performant, API-call-free experience during normal operation.
@@ -70,7 +73,7 @@ This ensures a performant, API-call-free experience during normal operation.
 
 ## 📡 External Data Source
 
-The backend fetches racing data from the public [Jolpi Ergast API](https://api.jolpi.ca/ergast/), a modern GraphQL-compatible wrapper around the Ergast Developer API.
+The backend fetches racing data from the public [Jolpi Ergast API](https://api.jolpi.ca/ergast/), a wrapper around the Ergast Developer API.
 
 This external API provides detailed information about:
 - F1 champions per season
@@ -245,7 +248,6 @@ The backend is fully observable and debuggable using **Prometheus**, **Micromete
   - HTTP and WebFlux request stats
   - Redis hit/miss rates
   - JVM health metrics
-  - Custom Micrometer counters (if added)
 
 ### 📈 Grafana Dashboards
 - Available at:  
