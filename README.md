@@ -36,8 +36,6 @@ Below are a few screens captured from the running Android application:
 
 ### 📱 Android
 
-### 🤖 Android Architecture – Trade-off Analysis
-
 | Area                      | Chosen Option                  | Alternatives Considered     | Trade-offs                                                                 |
 |---------------------------|--------------------------------|-----------------------------|----------------------------------------------------------------------------|
 | UI Toolkit                | **Jetpack Compose**            | XML-based Views             | Enables declarative UI and real-time previews, but requires learning new patterns and APIs. |
