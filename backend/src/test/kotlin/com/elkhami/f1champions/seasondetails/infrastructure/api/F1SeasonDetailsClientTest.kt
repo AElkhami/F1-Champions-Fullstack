@@ -8,16 +8,16 @@ import com.elkhami.f1champions.seasondetails.intrastructure.api.F1SeasonDetailsC
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.util.UriBuilder
+import reactor.core.publisher.Mono
 import java.net.URI
 import java.util.function.Function
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlinx.coroutines.test.runTest
-import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.util.UriBuilder
-import reactor.core.publisher.Mono
 
 class F1SeasonDetailsClientTest {
     private val webClient = mockk<WebClient>(relaxed = true)
@@ -26,7 +26,6 @@ class F1SeasonDetailsClientTest {
     private val responseSpec = mockk<WebClient.ResponseSpec>(relaxed = true)
     private val resiliencePolicy = mockk<CompositeResiliencePolicy>()
     private val parser = mockk<SeasonDetailsParser>()
-
 
     private lateinit var client: F1SeasonDetailsClient
 
@@ -40,7 +39,7 @@ class F1SeasonDetailsClientTest {
             F1SeasonDetailsClient(
                 webClient = webClient,
                 resiliencePolicy = resiliencePolicy,
-                parser = parser
+                parser = parser,
             )
     }
 
@@ -52,20 +51,20 @@ class F1SeasonDetailsClientTest {
             every { responseSpec.bodyToMono(String::class.java) } returns Mono.just(json)
 
             every { parser.parseSeasonDetails("2020", json) } returns
-                    listOf(
-                        SeasonDetail(
-                            season = "2020",
-                            round = "1",
-                            raceName = "Austrian Grand Prix",
-                            date = "2020-07-05",
-                            winnerId = "bottas",
-                            winnerName = "Valtteri Bottas",
-                            constructor = "Mercedes",
-                        ),
-                    )
+                listOf(
+                    SeasonDetail(
+                        season = "2020",
+                        round = "1",
+                        raceName = "Austrian Grand Prix",
+                        date = "2020-07-05",
+                        winnerId = "bottas",
+                        winnerName = "Valtteri Bottas",
+                        constructor = "Mercedes",
+                    ),
+                )
 
             val result = client.fetchFromApi("2020")
-            val parsedResult =  parser.parseSeasonDetails("2020", result)
+            val parsedResult = parser.parseSeasonDetails("2020", result)
 
             assertNotNull(result)
             assertEquals("2020", parsedResult.first().season)

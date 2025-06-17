@@ -3,10 +3,6 @@ package com.elkhami.f1champions.champions.infrastructure.api
 import com.elkhami.f1champions.champions.domain.model.Champion
 import com.elkhami.f1champions.champions.domain.service.ChampionParser
 import com.elkhami.f1champions.core.resilience.CompositeResiliencePolicy
-import io.github.resilience4j.circuitbreaker.CircuitBreaker
-import io.github.resilience4j.ratelimiter.RateLimiter
-import io.github.resilience4j.retry.Retry
-import io.github.resilience4j.retry.RetryConfig
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -15,7 +11,6 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.util.UriBuilder
 import reactor.core.publisher.Mono
 import java.net.URI
-import java.time.Duration
 import java.util.function.Function
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -35,18 +30,6 @@ class F1ChampionsClientTest {
 
     @BeforeTest
     fun setup() {
-        val retry =
-            Retry.of(
-                "test",
-                RetryConfig.custom<Any>()
-                    .maxAttempts(2)
-                    .waitDuration(Duration.ofMillis(10))
-                    .build(),
-            )
-
-        val rateLimiter = RateLimiter.ofDefaults("testRateLimiter")
-        val circuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker")
-
         every { webClient.get() } returns uriSpec
 
         every { uriSpec.uri(any<Function<UriBuilder, URI>>()) } returns headersSpec
@@ -57,7 +40,7 @@ class F1ChampionsClientTest {
             F1ChampionsClient(
                 webClient = webClient,
                 resiliencePolicy = resiliencePolicy,
-                parser = parser
+                parser = parser,
             )
     }
 
@@ -69,9 +52,9 @@ class F1ChampionsClientTest {
             every { responseSpec.bodyToMono(String::class.java) } returns Mono.just(json)
 
             every { parser.parseChampions(json) } returns
-                    listOf(
-                        Champion("2020", "hamilton", "Lewis Hamilton", "Mercedes"),
-                    )
+                listOf(
+                    Champion("2020", "hamilton", "Lewis Hamilton", "Mercedes"),
+                )
 
             val result = client.fetchFromApi(2020)
             val parsedResult = parser.parseChampions(result)
@@ -95,7 +78,6 @@ class F1ChampionsClientTest {
             }
             every { responseSpec.bodyToMono(String::class.java) } returns Mono.just(json)
             every { parser.parseChampions(json) } returns listOf(expectedChampion)
-
 
             val result = client.fetchChampion(2021)
 
