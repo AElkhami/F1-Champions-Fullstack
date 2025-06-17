@@ -1,16 +1,16 @@
-package com.elkhami.f1champions.seasondetails.application.seeding
+package com.elkhami.f1champions.seasondetails.application.usecase.seeding
 
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
+import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsClient
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsService
-import com.elkhami.f1champions.seasondetails.intrastructure.api.SeasonDetailsClient
 import com.elkhami.f1champions.seasondetails.intrastructure.mapper.toEntity
 import org.springframework.stereotype.Component
 
 @Component
-class F1SeasonDetailsSeeder(
+class F1SeedSeasonDetailsUseCase(
     private val seasonDetailsClient: SeasonDetailsClient,
     private val seasonDetailsService: SeasonDetailsService,
-) : SeasonDetailsSeeder {
+) : SeedSeasonDetailsUseCase {
     private val logger = loggerWithPrefix()
 
     override suspend fun seedIfMissing(year: Int) {
@@ -34,7 +34,7 @@ class F1SeasonDetailsSeeder(
 
     private suspend fun fetchAndSaveSeasonDetails(season: String) {
         val winners = seasonDetailsClient.fetchSeasonDetails(season)
-        if (winners.isEmpty()) {
+        if (winners.isNullOrEmpty()) {
             logger.warn("⚠️ No season details found for $season")
         } else {
             winners.forEach { seasonDetailsService.saveSeasonDetails(it.toEntity()) }

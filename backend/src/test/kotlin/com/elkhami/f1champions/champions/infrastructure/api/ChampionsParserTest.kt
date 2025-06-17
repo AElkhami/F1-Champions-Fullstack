@@ -35,7 +35,7 @@ class ChampionsParserTest {
             }
             """.trimIndent()
 
-        val result = ChampionParser.parseChampions(json)
+        val result = F1ChampionParser().parseChampions(json)
 
         assertEquals(1, result.size)
         val champ = result[0]

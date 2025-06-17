@@ -3,11 +3,11 @@ package com.elkhami.f1champions.champions.application
 import com.elkhami.f1champions.champions.domain.ChampionRepository
 import com.elkhami.f1champions.champions.domain.model.Champion
 import com.elkhami.f1champions.champions.domain.service.ChampionsService
-import com.elkhami.f1champions.champions.infrastructure.db.entity.ChampionEntity
 import com.elkhami.f1champions.champions.infrastructure.mapper.toDomain
+import com.elkhami.f1champions.champions.infrastructure.mapper.toEntity
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
 import org.springframework.cache.CacheManager
-import org.springframework.cache.annotation.CachePut
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
 @Service
@@ -17,30 +17,31 @@ class F1ChampionsService(
 ) : ChampionsService {
     val logger = loggerWithPrefix()
 
-    @CachePut(CHAMPIONS_CACHE)
+    @Cacheable(CHAMPIONS_CACHE)
     override fun getChampions(): List<Champion> {
         return championRepo.findAll().map { it.toDomain() }
     }
 
-    override fun findChampionsBySeason(season: String): ChampionEntity? {
-        return championRepo.findBySeason(season)
+    override fun findChampionsBySeason(season: String): Champion? {
+        return championRepo.findBySeason(season)?.toDomain()
     }
 
-    override fun saveChampion(championEntity: ChampionEntity) {
-        val existing = championRepo.findBySeason(championEntity.season)
+    override fun saveChampion(champion: Champion) {
+        val existing = championRepo.findBySeason(champion.season)
         val toSave =
             existing?.copy(
-                driverId = championEntity.driverId,
-                driverName = championEntity.driverName,
-                constructor = championEntity.constructor,
-            ) ?: championEntity
+                driverId = champion.driverId,
+                driverName = champion.driverName,
+                constructor = champion.constructor,
+            )?.toDomain() ?: champion
 
-        championRepo.save(toSave)
-        evictSeasonCache(championEntity.season)
+        val id = existing?.id
+        championRepo.save(toSave.toEntity(id))
+        evictSeasonCache(champion.season)
     }
 
     private fun evictSeasonCache(season: String) {
-        cacheManager.getCache(CHAMPIONS_CACHE)?.evict(season)
+        cacheManager.getCache(CHAMPIONS_CACHE)?.clear()
         logger.info("🧹 Evicted cache for season: $season")
     }
 

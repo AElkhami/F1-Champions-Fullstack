@@ -1,13 +1,15 @@
 package com.elkhami.f1champions.champions.infrastructure.api
 
 import com.elkhami.f1champions.champions.domain.model.Champion
+import com.elkhami.f1champions.champions.domain.service.ChampionParser
+import com.elkhami.f1champions.core.resilience.CompositeResiliencePolicy
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.ratelimiter.RateLimiter
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import kotlinx.coroutines.test.runTest
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.util.UriBuilder
@@ -21,13 +23,15 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class ChampionsClientTest {
+class F1ChampionsClientTest {
     private val webClient = mockk<WebClient>(relaxed = true)
     private val uriSpec = mockk<WebClient.RequestHeadersUriSpec<*>>(relaxed = true)
     private val headersSpec = mockk<WebClient.RequestHeadersSpec<*>>(relaxed = true)
     private val responseSpec = mockk<WebClient.ResponseSpec>(relaxed = true)
+    private val resiliencePolicy = mockk<CompositeResiliencePolicy>()
+    private val parser = mockk<ChampionParser>()
 
-    private lateinit var client: ChampionsClient
+    private lateinit var client: F1ChampionsClient
 
     @BeforeTest
     fun setup() {
@@ -50,11 +54,10 @@ class ChampionsClientTest {
         every { headersSpec.retrieve() } returns responseSpec
 
         client =
-            ChampionsClient(
+            F1ChampionsClient(
                 webClient = webClient,
-                circuitBreaker = circuitBreaker,
-                rateLimiter = rateLimiter,
-                retry = retry,
+                resiliencePolicy = resiliencePolicy,
+                parser = parser
             )
     }
 
@@ -65,17 +68,17 @@ class ChampionsClientTest {
 
             every { responseSpec.bodyToMono(String::class.java) } returns Mono.just(json)
 
-            mockkObject(ChampionParser)
-            every { ChampionParser.parseChampions(json) } returns
-                listOf(
-                    Champion("2020", "hamilton", "Lewis Hamilton", "Mercedes"),
-                )
+            every { parser.parseChampions(json) } returns
+                    listOf(
+                        Champion("2020", "hamilton", "Lewis Hamilton", "Mercedes"),
+                    )
 
             val result = client.fetchFromApi(2020)
+            val parsedResult = parser.parseChampions(result)
 
             assertNotNull(result)
-            assertEquals("2020", result.season)
-            assertEquals("hamilton", result.driverId)
+            assertEquals("2020", parsedResult.first().season)
+            assertEquals("hamilton", parsedResult.first().driverId)
         }
 
     @Test
@@ -83,10 +86,16 @@ class ChampionsClientTest {
         runTest {
             val expectedChampion = Champion("2021", "verstappen", "Max Verstappen", "Red Bull")
 
-            mockkObject(ChampionParser)
             val json = """{ "mock": "response" }"""
+
+            coEvery {
+                resiliencePolicy.execute<List<Champion>>(any())
+            } coAnswers {
+                firstArg<suspend () -> List<Champion>>().invoke()
+            }
             every { responseSpec.bodyToMono(String::class.java) } returns Mono.just(json)
-            every { ChampionParser.parseChampions(json) } returns listOf(expectedChampion)
+            every { parser.parseChampions(json) } returns listOf(expectedChampion)
+
 
             val result = client.fetchChampion(2021)
 

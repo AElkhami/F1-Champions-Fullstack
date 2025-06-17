@@ -7,7 +7,7 @@ import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsService
 import com.elkhami.f1champions.seasondetails.intrastructure.db.entity.SeasonDetailsEntity
 import com.elkhami.f1champions.seasondetails.intrastructure.mapper.toDomain
 import org.springframework.cache.CacheManager
-import org.springframework.cache.annotation.CachePut
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
 @Service
@@ -17,7 +17,7 @@ class F1SeasonDetailsService(
 ) : SeasonDetailsService {
     val logger = loggerWithPrefix()
 
-    @CachePut(SEASON_DETAILS_CACHE)
+    @Cacheable(SEASON_DETAILS_CACHE)
     override fun getSeasonDetails(season: String): List<SeasonDetail> {
         return seasonDetailsRepository.findBySeason(season).map { it.toDomain() }
     }
@@ -37,7 +37,7 @@ class F1SeasonDetailsService(
     }
 
     private fun evictSeasonCache(season: String) {
-        cacheManager.getCache(SEASON_DETAILS_CACHE)?.evict(season)
+        cacheManager.getCache(SEASON_DETAILS_CACHE)?.clear()
         logger.info("🧹 Evicted cache for season: $season")
     }
 

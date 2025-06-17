@@ -1,6 +1,7 @@
 package com.elkhami.f1champions.champions.application
 
 import com.elkhami.f1champions.champions.domain.ChampionRepository
+import com.elkhami.f1champions.champions.domain.model.Champion
 import com.elkhami.f1champions.champions.infrastructure.db.entity.ChampionEntity
 import io.mockk.Runs
 import io.mockk.every
@@ -86,7 +87,7 @@ class F1ChampionsServiceTest {
             )
 
         val updated =
-            ChampionEntity(
+            Champion(
                 season = "2022",
                 driverId = "leclerc",
                 driverName = "Charles Leclerc",
@@ -103,7 +104,7 @@ class F1ChampionsServiceTest {
         every { championRepository.findBySeason("2022") } returns existing
         every { championRepository.save(expectedToSave) } returns expectedToSave
         every { cacheManager.getCache(F1ChampionsService.CHAMPIONS_CACHE) } returns cache
-        every { cache.evict("2022") } just Runs
+        every { cache.clear() } just Runs
 
         service.saveChampion(updated)
 
@@ -111,7 +112,7 @@ class F1ChampionsServiceTest {
             championRepository.findBySeason("2022")
             championRepository.save(expectedToSave)
             cacheManager.getCache(F1ChampionsService.CHAMPIONS_CACHE)
-            cache.evict("2022")
+            cache.clear()
         }
     }
 }

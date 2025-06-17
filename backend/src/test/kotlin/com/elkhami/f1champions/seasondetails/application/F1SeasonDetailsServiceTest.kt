@@ -87,7 +87,7 @@ class F1SeasonDetailsServiceTest {
         every { seasonDetailsRepository.deleteBySeasonAndRound("2022", "1") } just Runs
         every { seasonDetailsRepository.save(entity) } returns entity
         every { cacheManager.getCache(F1SeasonDetailsService.SEASON_DETAILS_CACHE) } returns cache
-        every { cache.evict("2022") } just Runs
+        every { cache.clear() } just Runs
 
         service.saveSeasonDetails(entity)
 
@@ -95,7 +95,7 @@ class F1SeasonDetailsServiceTest {
             seasonDetailsRepository.deleteBySeasonAndRound("2022", "1")
             seasonDetailsRepository.save(entity)
             cacheManager.getCache(F1SeasonDetailsService.SEASON_DETAILS_CACHE)
-            cache.evict("2022")
+            cache.clear()
         }
     }
 }

@@ -1,9 +1,9 @@
 package com.elkhami.f1champions.champions.infrastructure.api.config
 
-import com.elkhami.f1champions.champions.infrastructure.api.ChampionsClient
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry
-import io.github.resilience4j.retry.RetryRegistry
+import com.elkhami.f1champions.champions.domain.service.ChampionsClient
+import com.elkhami.f1champions.champions.infrastructure.api.F1ChampionParser
+import com.elkhami.f1champions.champions.infrastructure.api.F1ChampionsClient
+import com.elkhami.f1champions.core.resilience.CompositeResiliencePolicy
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.function.client.WebClient
@@ -13,21 +13,13 @@ class ChampionsClientConfig {
     @Bean
     fun championsClient(
         webClient: WebClient,
-        circuitBreakerRegistry: CircuitBreakerRegistry,
-        rateLimiterRegistry: RateLimiterRegistry,
-        retryRegistry: RetryRegistry,
+        resiliencePolicy: CompositeResiliencePolicy,
+        parser: F1ChampionParser,
     ): ChampionsClient {
-        return ChampionsClient(
+        return F1ChampionsClient(
             webClient = webClient,
-            circuitBreaker = circuitBreakerRegistry.circuitBreaker(CIRCUIT_BREAKER_NAME),
-            rateLimiter = rateLimiterRegistry.rateLimiter(RATE_LIMITER_NAME),
-            retry = retryRegistry.retry(RETRY_NAME),
+            resiliencePolicy = resiliencePolicy,
+            parser = parser,
         )
-    }
-
-    companion object {
-        const val CIRCUIT_BREAKER_NAME = "champions-client"
-        const val RATE_LIMITER_NAME = "champions-rate-limiter"
-        const val RETRY_NAME = "champions-retry"
     }
 }
