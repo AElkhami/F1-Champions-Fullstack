@@ -1,9 +1,9 @@
 package com.elkhami.f1champions.seasondetails.application.seeding
 
+import com.elkhami.f1champions.seasondetails.application.usecase.seeding.F1SeedSeasonDetailsUseCase
 import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
+import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsClient
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsService
-import com.elkhami.f1champions.seasondetails.intrastructure.api.SeasonDetailsClient
-import com.elkhami.f1champions.seasondetails.intrastructure.db.entity.SeasonDetailsEntity
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -15,16 +15,16 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class F1SeasonDetailsSeederTest {
+class F1SeedSeasonDetailsUseCaseTest {
     private val seasonDetailsClient = mockk<SeasonDetailsClient>()
     private val seasonDetailsService = mockk<SeasonDetailsService>()
 
-    private lateinit var seeder: F1SeasonDetailsSeeder
+    private lateinit var seeder: F1SeedSeasonDetailsUseCase
 
     @BeforeTest
     fun setup() {
         seeder =
-            F1SeasonDetailsSeeder(
+            F1SeedSeasonDetailsUseCase(
                 seasonDetailsClient = seasonDetailsClient,
                 seasonDetailsService = seasonDetailsService,
             )
@@ -37,7 +37,7 @@ class F1SeasonDetailsSeederTest {
 
             every { seasonDetailsService.findDetailsBySeason(season) } returns
                 listOf(
-                    SeasonDetailsEntity(
+                    SeasonDetail(
                         season = season,
                         round = "1",
                         raceName = "Australian GP",
@@ -75,12 +75,14 @@ class F1SeasonDetailsSeederTest {
             every { seasonDetailsService.findDetailsBySeason(season) } returns emptyList()
             coEvery { seasonDetailsClient.fetchSeasonDetails(season) } returns listOf(detail)
             every { seasonDetailsService.saveSeasonDetails(any()) } just Runs
+            every { seasonDetailsService.evictSeasonCache(season) } just Runs
 
             seeder.seedIfMissing(year)
 
             verify { seasonDetailsService.findDetailsBySeason(season) }
             coVerify { seasonDetailsClient.fetchSeasonDetails(season) }
             verify { seasonDetailsService.saveSeasonDetails(match { it.raceName == "Bahrain GP" }) }
+            verify { seasonDetailsService.evictSeasonCache(season) }
         }
 
     @Test
@@ -117,10 +119,12 @@ class F1SeasonDetailsSeederTest {
 
             coEvery { seasonDetailsClient.fetchSeasonDetails(season) } returns listOf(detail)
             every { seasonDetailsService.saveSeasonDetails(any()) } just Runs
+            every { seasonDetailsService.evictSeasonCache(season) } just Runs
 
             seeder.forceRefresh(year)
 
             coVerify { seasonDetailsClient.fetchSeasonDetails(season) }
             verify { seasonDetailsService.saveSeasonDetails(match { it.winnerName == "Max Verstappen" }) }
+            verify { seasonDetailsService.evictSeasonCache(season) }
         }
 }

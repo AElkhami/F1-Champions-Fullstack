@@ -1,10 +1,13 @@
 package com.elkhami.f1champions.seasondetails.intrastructure.api
 
 import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
+import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsParser
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.stereotype.Component
 
-object SeasonDetailsParser {
-    fun parseSeasonDetails(
+@Component
+class F1SeasonDetailsParser : SeasonDetailsParser {
+    override fun parseSeasonDetails(
         season: String,
         json: String?,
     ): List<SeasonDetail> {

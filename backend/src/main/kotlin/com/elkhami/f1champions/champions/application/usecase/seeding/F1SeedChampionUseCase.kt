@@ -1,16 +1,15 @@
-package com.elkhami.f1champions.champions.application.seeding
+package com.elkhami.f1champions.champions.application.usecase.seeding
 
+import com.elkhami.f1champions.champions.domain.service.ChampionsClient
 import com.elkhami.f1champions.champions.domain.service.ChampionsService
-import com.elkhami.f1champions.champions.infrastructure.api.ChampionsClient
-import com.elkhami.f1champions.champions.infrastructure.mapper.toEntity
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
 import org.springframework.stereotype.Component
 
 @Component
-class F1ChampionSeeder(
+class F1SeedChampionUseCase(
     private val championsClient: ChampionsClient,
     private val championsService: ChampionsService,
-) : ChampionSeeder {
+) : SeedChampionUseCase {
     private val logger = loggerWithPrefix()
 
     override suspend fun seedIfMissing(year: Int) {
@@ -36,7 +35,7 @@ class F1ChampionSeeder(
         forced: Boolean,
     ) {
         championsClient.fetchChampion(season.toInt())?.let {
-            championsService.saveChampion(it.toEntity())
+            championsService.saveChampion(it)
             if (forced) {
                 logger.info("🔄 Forcefully refreshed champion for $season")
             } else {

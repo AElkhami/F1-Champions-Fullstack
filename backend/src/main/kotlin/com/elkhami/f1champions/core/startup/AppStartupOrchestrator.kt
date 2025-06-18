@@ -1,14 +1,14 @@
 package com.elkhami.f1champions.core.startup
 
-import com.elkhami.f1champions.champions.application.seeding.ChampionSeeder
+import com.elkhami.f1champions.champions.application.usecase.seeding.SeedChampionUseCase
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
-import com.elkhami.f1champions.seasondetails.application.seeding.SeasonDetailsSeeder
+import com.elkhami.f1champions.seasondetails.application.usecase.seeding.SeedSeasonDetailsUseCase
 import org.springframework.stereotype.Component
 
 @Component
 class AppStartupOrchestrator(
-    private val championSeeder: ChampionSeeder,
-    private val seasonDetailsSeeder: SeasonDetailsSeeder,
+    private val seedChampionUseCase: SeedChampionUseCase,
+    private val seedSeasonDetailsUseCase: SeedSeasonDetailsUseCase,
 ) {
     private val logger = loggerWithPrefix()
 
@@ -24,33 +24,33 @@ class AppStartupOrchestrator(
 
     suspend fun seedChampions(year: Int) {
         runCatching {
-            championSeeder.seedIfMissing(year)
+            seedChampionUseCase.seedIfMissing(year)
         }.onFailure {
-            logger.error("❌ Error seeding champion for year $year")
+            logger.error("❌ Error seeding champion for year $year, ${it.message}")
         }
     }
 
     suspend fun seedSeasons(year: Int) {
         runCatching {
-            seasonDetailsSeeder.seedIfMissing(year)
+            seedSeasonDetailsUseCase.seedIfMissing(year)
         }.onFailure {
-            logger.error("❌ Error seeding season details for year $year")
+            logger.error("❌ Error seeding season details for year $year, ${it.message}")
         }
     }
 
     suspend fun refreshChampion(year: Int) {
         runCatching {
-            championSeeder.forceRefresh(year)
+            seedChampionUseCase.forceRefresh(year)
         }.onFailure {
-            logger.error("❌ Error refreshing champion for year $year")
+            logger.error("❌ Error refreshing champion for year $year, ${it.message}")
         }
     }
 
     suspend fun refreshSeasons(year: Int) {
         runCatching {
-            seasonDetailsSeeder.forceRefresh(year)
+            seedSeasonDetailsUseCase.forceRefresh(year)
         }.onFailure {
-            logger.error("❌ Error refreshing season details for year $year")
+            logger.error("❌ Error refreshing season details for year $year, ${it.message}")
         }
     }
 }

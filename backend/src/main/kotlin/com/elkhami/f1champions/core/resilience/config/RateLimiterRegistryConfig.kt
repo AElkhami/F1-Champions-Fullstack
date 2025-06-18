@@ -1,4 +1,4 @@
-package com.elkhami.f1champions.core.resilience4j
+package com.elkhami.f1champions.core.resilience.config
 
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import org.springframework.context.annotation.Bean

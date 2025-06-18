@@ -1,7 +1,7 @@
 package com.elkhami.f1champions.seasondetails.application
 
 import com.elkhami.f1champions.seasondetails.domain.SeasonDetailsRepository
-import com.elkhami.f1champions.seasondetails.intrastructure.db.entity.SeasonDetailsEntity
+import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -10,26 +10,21 @@ import io.mockk.verifyOrder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.cache.Cache
-import org.springframework.cache.CacheManager
 
 class F1SeasonDetailsServiceTest {
     private val seasonDetailsRepository = mockk<SeasonDetailsRepository>()
-    private val cacheManager = mockk<CacheManager>()
-    private val cache = mockk<Cache>(relaxed = true)
     private lateinit var service: F1SeasonDetailsService
 
     @BeforeEach
     fun setup() {
-        every { cacheManager.getCache(F1SeasonDetailsService.SEASON_DETAILS_CACHE) } returns cache
-        service = F1SeasonDetailsService(seasonDetailsRepository, cacheManager)
+        service = F1SeasonDetailsService(seasonDetailsRepository)
     }
 
     @Test
     fun `getSeasonDetails returns mapped domain list`() {
         val season = "2020"
         val entity =
-            SeasonDetailsEntity(
+            SeasonDetail(
                 season = season,
                 round = "1",
                 raceName = "Australian GP",
@@ -41,18 +36,18 @@ class F1SeasonDetailsServiceTest {
 
         every { seasonDetailsRepository.findBySeason(season) } returns listOf(entity)
 
-        val result = service.getSeasonDetails(season)
+        val result = service.findDetailsBySeason(season)
 
-        assertEquals(1, result.size)
-        assertEquals("Australian GP", result.first().raceName)
-        assertEquals("Lewis Hamilton", result.first().winnerName)
+        assertEquals(1, result?.size)
+        assertEquals("Australian GP", result?.first()?.raceName)
+        assertEquals("Lewis Hamilton", result?.first()?.winnerName)
     }
 
     @Test
     fun `findDetailsBySeason returns entity list from repository`() {
         val season = "2021"
         val entity =
-            SeasonDetailsEntity(
+            SeasonDetail(
                 season = season,
                 round = "2",
                 raceName = "Emilia Romagna GP",
@@ -66,15 +61,15 @@ class F1SeasonDetailsServiceTest {
 
         val result = service.findDetailsBySeason(season)
 
-        assertEquals(1, result.size)
-        assertEquals("Emilia Romagna GP", result.first().raceName)
-        assertEquals("Max Verstappen", result.first().winnerName)
+        assertEquals(1, result?.size)
+        assertEquals("Emilia Romagna GP", result?.first()?.raceName)
+        assertEquals("Max Verstappen", result?.first()?.winnerName)
     }
 
     @Test
     fun `saveSeasonDetails deletes by season and round, saves entity, and evicts cache`() {
-        val entity =
-            SeasonDetailsEntity(
+        val seasonDetail =
+            SeasonDetail(
                 season = "2022",
                 round = "1",
                 raceName = "Bahrain GP",
@@ -84,18 +79,15 @@ class F1SeasonDetailsServiceTest {
                 constructor = "Ferrari",
             )
 
+        every { seasonDetailsRepository.findBySeason("2022") } returns emptyList()
         every { seasonDetailsRepository.deleteBySeasonAndRound("2022", "1") } just Runs
-        every { seasonDetailsRepository.save(entity) } returns entity
-        every { cacheManager.getCache(F1SeasonDetailsService.SEASON_DETAILS_CACHE) } returns cache
-        every { cache.evict("2022") } just Runs
+        every { seasonDetailsRepository.save(seasonDetail) } returns seasonDetail
 
-        service.saveSeasonDetails(entity)
+        service.saveSeasonDetails(seasonDetail)
 
         verifyOrder {
             seasonDetailsRepository.deleteBySeasonAndRound("2022", "1")
-            seasonDetailsRepository.save(entity)
-            cacheManager.getCache(F1SeasonDetailsService.SEASON_DETAILS_CACHE)
-            cache.evict("2022")
+            seasonDetailsRepository.save(seasonDetail)
         }
     }
 }

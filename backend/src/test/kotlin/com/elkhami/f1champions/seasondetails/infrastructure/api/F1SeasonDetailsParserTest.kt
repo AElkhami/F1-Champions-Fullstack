@@ -1,10 +1,10 @@
 package com.elkhami.f1champions.seasondetails.infrastructure.api
 
-import com.elkhami.f1champions.seasondetails.intrastructure.api.SeasonDetailsParser
+import com.elkhami.f1champions.seasondetails.intrastructure.api.F1SeasonDetailsParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class SeasonDetailsParserTest {
+class F1SeasonDetailsParserTest {
     @Test
     fun `parseRaceWinners should return list of RaceResult`() {
         val json =
@@ -37,7 +37,7 @@ class SeasonDetailsParserTest {
             }
             """.trimIndent()
 
-        val result = SeasonDetailsParser.parseSeasonDetails("2021", json)
+        val result = F1SeasonDetailsParser().parseSeasonDetails("2021", json)
 
         assertEquals(1, result.size)
         val race = result[0]

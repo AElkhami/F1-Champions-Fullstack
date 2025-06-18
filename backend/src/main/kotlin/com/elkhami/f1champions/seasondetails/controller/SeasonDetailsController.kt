@@ -13,5 +13,5 @@ class SeasonDetailsController(private val service: SeasonDetailsService) {
     @GetMapping("/champions/{season}")
     fun getSeasonDetails(
         @PathVariable season: String,
-    ): List<SeasonDetail> = service.getSeasonDetails(season)
+    ): List<SeasonDetail>? = service.findDetailsBySeason(season)
 }

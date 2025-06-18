@@ -1,10 +1,13 @@
 package com.elkhami.f1champions.champions.infrastructure.api
 
 import com.elkhami.f1champions.champions.domain.model.Champion
+import com.elkhami.f1champions.champions.domain.service.ChampionParser
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.stereotype.Component
 
-object ChampionParser {
-    fun parseChampions(json: String?): List<Champion> {
+@Component
+class F1ChampionParser : ChampionParser {
+    override fun parseChampions(json: String?): List<Champion> {
         val root = ObjectMapper().readTree(json)
         return root["MRData"]["StandingsTable"]["StandingsLists"].map {
             val driver = it["DriverStandings"][0]["Driver"]

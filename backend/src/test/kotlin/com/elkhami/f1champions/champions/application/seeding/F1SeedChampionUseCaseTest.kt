@@ -1,9 +1,9 @@
 package com.elkhami.f1champions.champions.application.seeding
 
+import com.elkhami.f1champions.champions.application.usecase.seeding.F1SeedChampionUseCase
 import com.elkhami.f1champions.champions.domain.model.Champion
+import com.elkhami.f1champions.champions.domain.service.ChampionsClient
 import com.elkhami.f1champions.champions.domain.service.ChampionsService
-import com.elkhami.f1champions.champions.infrastructure.api.ChampionsClient
-import com.elkhami.f1champions.champions.infrastructure.db.entity.ChampionEntity
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -15,16 +15,16 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class F1ChampionSeederTest {
+class F1SeedChampionUseCaseTest {
     private val championsClient = mockk<ChampionsClient>()
     private val championsService = mockk<ChampionsService>()
 
-    private lateinit var seeder: F1ChampionSeeder
+    private lateinit var seeder: F1SeedChampionUseCase
 
     @BeforeTest
     fun setup() {
         seeder =
-            F1ChampionSeeder(
+            F1SeedChampionUseCase(
                 championsClient = championsClient,
                 championsService = championsService,
             )
@@ -36,7 +36,7 @@ class F1ChampionSeederTest {
             val season = "2020"
 
             every { championsService.findChampionsBySeason(season) } returns
-                ChampionEntity(
+                Champion(
                     season = season,
                     driverId = "hamilton",
                     driverName = "Lewis Hamilton",

@@ -1,14 +1,12 @@
 package com.elkhami.f1champions.champions.application
 
 import com.elkhami.f1champions.champions.domain.ChampionRepository
-import com.elkhami.f1champions.champions.infrastructure.db.entity.ChampionEntity
+import com.elkhami.f1champions.champions.domain.model.Champion
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verifyOrder
-import org.springframework.cache.Cache
-import org.springframework.cache.CacheManager
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,20 +15,17 @@ import kotlin.test.assertNull
 
 class F1ChampionsServiceTest {
     private val championRepository = mockk<ChampionRepository>()
-    private val cacheManager = mockk<CacheManager>()
-    private val cache = mockk<Cache>(relaxed = true)
     private lateinit var service: F1ChampionsService
 
     @BeforeTest
     fun setup() {
-        every { cacheManager.getCache(F1ChampionsService.CHAMPIONS_CACHE) } returns cache
-        service = F1ChampionsService(championRepository, cacheManager)
+        service = F1ChampionsService(championRepository)
     }
 
     @Test
     fun `getChampions returns mapped domain list`() {
         val entity =
-            ChampionEntity(
+            Champion(
                 season = "2020",
                 driverId = "hamilton",
                 driverName = "Lewis Hamilton",
@@ -49,7 +44,7 @@ class F1ChampionsServiceTest {
     fun `findChampionsBySeason returns correct entity`() {
         val season = "2021"
         val entity =
-            ChampionEntity(
+            Champion(
                 season = season,
                 driverId = "verstappen",
                 driverName = "Max Verstappen",
@@ -76,9 +71,9 @@ class F1ChampionsServiceTest {
     }
 
     @Test
-    fun `saveChampion checks for existing, saves updated entity, and evicts cache`() {
+    fun `saveChampion checks for existing, saves updated entity`() {
         val existing =
-            ChampionEntity(
+            Champion(
                 season = "2022",
                 driverId = "hamilton",
                 driverName = "Lewis Hamilton",
@@ -86,32 +81,39 @@ class F1ChampionsServiceTest {
             )
 
         val updated =
-            ChampionEntity(
+            Champion(
                 season = "2022",
                 driverId = "leclerc",
                 driverName = "Charles Leclerc",
                 constructor = "Ferrari",
             )
 
-        val expectedToSave =
-            existing.copy(
-                driverId = updated.driverId,
-                driverName = updated.driverName,
-                constructor = updated.constructor,
-            )
-
         every { championRepository.findBySeason("2022") } returns existing
-        every { championRepository.save(expectedToSave) } returns expectedToSave
-        every { cacheManager.getCache(F1ChampionsService.CHAMPIONS_CACHE) } returns cache
-        every { cache.evict("2022") } just Runs
+        every {
+            championRepository.save(
+                match {
+                    it.season == "2022" &&
+                        it.driverId == "leclerc" &&
+                        it.driverName == "Charles Leclerc" &&
+                        it.constructor == "Ferrari"
+                },
+            )
+        } returns updated
+
+        every { championRepository.evictSeasonCache("2022") } just Runs
 
         service.saveChampion(updated)
 
         verifyOrder {
             championRepository.findBySeason("2022")
-            championRepository.save(expectedToSave)
-            cacheManager.getCache(F1ChampionsService.CHAMPIONS_CACHE)
-            cache.evict("2022")
+            championRepository.save(
+                match {
+                    it.season == "2022" &&
+                        it.driverId == "leclerc" &&
+                        it.driverName == "Charles Leclerc" &&
+                        it.constructor == "Ferrari"
+                },
+            )
         }
     }
 }
