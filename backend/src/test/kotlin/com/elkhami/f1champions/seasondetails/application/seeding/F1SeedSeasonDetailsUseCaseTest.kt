@@ -4,7 +4,6 @@ import com.elkhami.f1champions.seasondetails.application.usecase.seeding.F1SeedS
 import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsClient
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsService
-import com.elkhami.f1champions.seasondetails.intrastructure.db.entity.SeasonDetailsEntity
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -38,7 +37,7 @@ class F1SeedSeasonDetailsUseCaseTest {
 
             every { seasonDetailsService.findDetailsBySeason(season) } returns
                 listOf(
-                    SeasonDetailsEntity(
+                    SeasonDetail(
                         season = season,
                         round = "1",
                         raceName = "Australian GP",
@@ -76,12 +75,14 @@ class F1SeedSeasonDetailsUseCaseTest {
             every { seasonDetailsService.findDetailsBySeason(season) } returns emptyList()
             coEvery { seasonDetailsClient.fetchSeasonDetails(season) } returns listOf(detail)
             every { seasonDetailsService.saveSeasonDetails(any()) } just Runs
+            every { seasonDetailsService.evictSeasonCache(season) } just Runs
 
             seeder.seedIfMissing(year)
 
             verify { seasonDetailsService.findDetailsBySeason(season) }
             coVerify { seasonDetailsClient.fetchSeasonDetails(season) }
             verify { seasonDetailsService.saveSeasonDetails(match { it.raceName == "Bahrain GP" }) }
+            verify { seasonDetailsService.evictSeasonCache(season) }
         }
 
     @Test
@@ -118,10 +119,12 @@ class F1SeedSeasonDetailsUseCaseTest {
 
             coEvery { seasonDetailsClient.fetchSeasonDetails(season) } returns listOf(detail)
             every { seasonDetailsService.saveSeasonDetails(any()) } just Runs
+            every { seasonDetailsService.evictSeasonCache(season) } just Runs
 
             seeder.forceRefresh(year)
 
             coVerify { seasonDetailsClient.fetchSeasonDetails(season) }
             verify { seasonDetailsService.saveSeasonDetails(match { it.winnerName == "Max Verstappen" }) }
+            verify { seasonDetailsService.evictSeasonCache(season) }
         }
 }

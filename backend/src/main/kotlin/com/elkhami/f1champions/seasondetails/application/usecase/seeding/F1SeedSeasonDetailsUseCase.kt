@@ -3,7 +3,6 @@ package com.elkhami.f1champions.seasondetails.application.usecase.seeding
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsClient
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsService
-import com.elkhami.f1champions.seasondetails.intrastructure.mapper.toEntity
 import org.springframework.stereotype.Component
 
 @Component
@@ -29,7 +28,7 @@ class F1SeedSeasonDetailsUseCase(
     }
 
     private suspend fun seasonDetailsExist(season: String): Boolean {
-        return seasonDetailsService.findDetailsBySeason(season).isNotEmpty()
+        return seasonDetailsService.findDetailsBySeason(season)?.isNotEmpty() ?: false
     }
 
     private suspend fun fetchAndSaveSeasonDetails(season: String) {
@@ -37,7 +36,8 @@ class F1SeedSeasonDetailsUseCase(
         if (winners.isNullOrEmpty()) {
             logger.warn("⚠️ No season details found for $season")
         } else {
-            winners.forEach { seasonDetailsService.saveSeasonDetails(it.toEntity()) }
+            winners.forEach { seasonDetailsService.saveSeasonDetails(it) }
+            seasonDetailsService.evictSeasonCache(season)
             logger.info("✅ Saved ${winners.size} race winners for season $season")
         }
     }

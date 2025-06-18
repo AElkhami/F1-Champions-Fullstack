@@ -1,11 +1,13 @@
 package com.elkhami.f1champions.champions.domain
 
-import com.elkhami.f1champions.champions.infrastructure.db.entity.ChampionEntity
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
-import java.util.UUID
+import com.elkhami.f1champions.champions.domain.model.Champion
 
-@Repository
-interface ChampionRepository : JpaRepository<ChampionEntity, UUID> {
-    fun findBySeason(season: String): ChampionEntity?
+interface ChampionRepository {
+    fun findAll(): List<Champion>
+
+    fun findBySeason(season: String): Champion?
+
+    fun save(champion: Champion): Champion
+
+    fun evictSeasonCache(season: String)
 }
