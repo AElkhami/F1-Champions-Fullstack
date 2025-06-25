@@ -1,12 +1,17 @@
 package com.elkhami.f1champions.seasondetails.infrastructure.api
 
+import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
 import com.elkhami.f1champions.seasondetails.intrastructure.api.F1SeasonDetailsParser
+import com.fasterxml.jackson.databind.ObjectMapper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class F1SeasonDetailsParserTest {
+    private val objectMapper = ObjectMapper()
+    private val parser = F1SeasonDetailsParser(objectMapper)
+
     @Test
-    fun `parseRaceWinners should return list of RaceResult`() {
+    fun `parseSeasonDetails should return list of SeasonDetail`() {
         val json =
             """
             {
@@ -37,7 +42,7 @@ class F1SeasonDetailsParserTest {
             }
             """.trimIndent()
 
-        val result = F1SeasonDetailsParser().parseSeasonDetails("2021", json)
+        val result: List<SeasonDetail> = parser.parseSeasonDetails("2021", json)
 
         assertEquals(1, result.size)
         val race = result[0]

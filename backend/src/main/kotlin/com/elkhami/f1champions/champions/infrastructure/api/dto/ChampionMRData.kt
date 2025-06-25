@@ -1,0 +1,7 @@
+package com.elkhami.f1champions.champions.infrastructure.api.dto
+
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class ChampionMRData(
+    @JsonProperty("StandingsTable") val standingsTable: StandingsTable,
+)
