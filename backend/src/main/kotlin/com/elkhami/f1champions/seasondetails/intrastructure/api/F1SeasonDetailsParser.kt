@@ -1,9 +1,10 @@
 package com.elkhami.f1champions.seasondetails.intrastructure.api
 
+import com.elkhami.f1champions.core.constants.ApiConstants.FIRST_POSITION
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
 import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsParser
-import com.elkhami.f1champions.seasondetails.intrastructure.api.dto.F1ApiResponse
+import com.elkhami.f1champions.seasondetails.intrastructure.api.dto.SeasonDetailsApiResponse
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 
@@ -16,9 +17,9 @@ class F1SeasonDetailsParser(private val objectMapper: ObjectMapper) : SeasonDeta
         json: String?,
     ): List<SeasonDetail> {
         return try {
-            val response = objectMapper.readValue(json, F1ApiResponse::class.java)
+            val response = objectMapper.readValue(json, SeasonDetailsApiResponse::class.java)
             response.mrData.raceTable.races.mapNotNull { race ->
-                val result = race.results.getOrNull(0)
+                val result = race.results.getOrNull(FIRST_POSITION)
                 val winner = result?.driver
                 val constructor = result?.constructor
 

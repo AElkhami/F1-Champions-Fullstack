@@ -15,22 +15,23 @@ class WebClientConfig {
     fun webClient(
         builder: WebClient.Builder,
         @Value("\${f1.api.base-url}") baseUrl: String,
-    ): WebClient = buildConfiguredWebClient(baseUrl)
+        @Value("\${f1.api.response-timeout:5}") responseTimeout: Long,
+        @Value("\${f1.api.connection-timeout:3000}") connectionTimeout: Int,
+    ): WebClient = buildConfiguredWebClient(baseUrl, responseTimeout, connectionTimeout)
 
-    private fun buildConfiguredWebClient(baseUrl: String): WebClient {
+    private fun buildConfiguredWebClient(
+        baseUrl: String,
+        responseTimeout: Long,
+        connectionTimeout: Int,
+    ): WebClient {
         val httpClient =
             HttpClient.create()
-                .responseTimeout(Duration.ofSeconds(RESPONSE_TIMEOUT))
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECTION_TIMEOUT)
+                .responseTimeout(Duration.ofSeconds(responseTimeout))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeout)
 
         return WebClient.builder()
             .baseUrl(baseUrl)
             .clientConnector(ReactorClientHttpConnector(httpClient))
             .build()
-    }
-
-    companion object {
-        const val RESPONSE_TIMEOUT = 5L
-        const val CONNECTION_TIMEOUT = 3000
     }
 }

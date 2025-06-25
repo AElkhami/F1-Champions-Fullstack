@@ -3,6 +3,7 @@ package com.elkhami.f1champions.champions.infrastructure.api
 import com.elkhami.f1champions.champions.domain.model.Champion
 import com.elkhami.f1champions.champions.domain.service.ChampionParser
 import com.elkhami.f1champions.champions.infrastructure.api.dto.ChampionApiResponse
+import com.elkhami.f1champions.core.constants.ApiConstants.FIRST_POSITION
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
@@ -16,9 +17,9 @@ class F1ChampionParser(private val objectMapper: ObjectMapper) : ChampionParser 
             val response = objectMapper.readValue(json, ChampionApiResponse::class.java)
 
             response.mrData.standingsTable.standingsLists.mapNotNull { standing ->
-                val driverStanding = standing.driverStandings.getOrNull(0)
+                val driverStanding = standing.driverStandings.getOrNull(FIRST_POSITION)
                 val driver = driverStanding?.driver
-                val constructor = driverStanding?.constructors?.getOrNull(0)
+                val constructor = driverStanding?.constructors?.getOrNull(FIRST_POSITION)
 
                 if (driver == null || constructor == null) {
                     logger.warn("⚠️ Missing driver or constructor for season=${standing.season}")

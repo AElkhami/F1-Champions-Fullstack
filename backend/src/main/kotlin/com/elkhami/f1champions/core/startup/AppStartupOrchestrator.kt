@@ -1,6 +1,7 @@
 package com.elkhami.f1champions.core.startup
 
 import com.elkhami.f1champions.champions.application.usecase.seeding.SeedChampionUseCase
+import com.elkhami.f1champions.core.constants.ApiConstants.DEFAULT_SEASON_RANGE
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
 import com.elkhami.f1champions.seasondetails.application.usecase.seeding.SeedSeasonDetailsUseCase
 import org.springframework.stereotype.Component
@@ -13,8 +14,8 @@ class AppStartupOrchestrator(
     private val logger = loggerWithPrefix()
 
     suspend fun startUpSeed(
-        fromYear: Int = 2005,
-        toYear: Int = 2025,
+        fromYear: Int = DEFAULT_SEASON_RANGE.first,
+        toYear: Int = DEFAULT_SEASON_RANGE.last,
     ) {
         for (year in fromYear..toYear) {
             seedChampions(year)
