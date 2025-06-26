@@ -2,6 +2,7 @@ package com.elkhami.f1champions.champions.infrastructure.api
 
 import com.elkhami.f1champions.champions.domain.model.Champion
 import com.elkhami.f1champions.champions.domain.service.ChampionParser
+import com.elkhami.f1champions.core.network.ApiResponse
 import com.elkhami.f1champions.core.resilience.CompositeResiliencePolicy
 import io.mockk.coEvery
 import io.mockk.every
@@ -16,7 +17,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 class F1ChampionsClientTest {
     private val webClient = mockk<WebClient>(relaxed = true)
@@ -72,9 +72,9 @@ class F1ChampionsClientTest {
             val json = """{ "mock": "response" }"""
 
             coEvery {
-                resiliencePolicy.execute<List<Champion>>(any())
+                resiliencePolicy.execute<Champion?>(any())
             } coAnswers {
-                firstArg<suspend () -> List<Champion>>().invoke()
+                firstArg<suspend () -> Champion?>().invoke()
             }
             every { responseSpec.bodyToMono(String::class.java) } returns Mono.just(json)
             every { parser.parseChampions(json) } returns listOf(expectedChampion)
@@ -82,16 +82,18 @@ class F1ChampionsClientTest {
             val result = client.fetchChampion(2021)
 
             assertNotNull(result)
-            assertEquals(expectedChampion, result)
+            assert(result is ApiResponse.Success)
+            assertEquals(expectedChampion, (result as ApiResponse.Success).data)
         }
 
     @Test
-    fun `fetchChampion returns null and logs on failure`() =
+    fun `fetchChampion returns error response on failure`() =
         runTest {
             every { responseSpec.bodyToMono(String::class.java) } throws RuntimeException("API down")
 
             val result = client.fetchChampion(2022)
 
-            assertNull(result)
+            assertNotNull(result)
+            assert(result is ApiResponse.Error)
         }
 }

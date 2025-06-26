@@ -16,10 +16,22 @@ class F1SeasonDetailsParser(private val objectMapper: ObjectMapper) : SeasonDeta
         season: String,
         json: String?,
     ): List<SeasonDetail> {
+        if (json.isNullOrBlank()) {
+            logger.warn("⚠️ Received null or blank JSON for season details: $season")
+            return emptyList()
+        }
+
         return try {
             val response = objectMapper.readValue(json, SeasonDetailsApiResponse::class.java)
-            response.mrData.raceTable.races.mapNotNull { race ->
-                val result = race.results.getOrNull(FIRST_POSITION)
+
+            val races =
+                response.mrData.raceTable.races
+
+            races.mapNotNull { race ->
+                val results =
+                    race.results
+
+                val result = results.getOrNull(FIRST_POSITION)
                 val winner = result?.driver
                 val constructor = result?.constructor
 
@@ -28,15 +40,20 @@ class F1SeasonDetailsParser(private val objectMapper: ObjectMapper) : SeasonDeta
                     return@mapNotNull null
                 }
 
-                SeasonDetail(
-                    season = season,
-                    round = race.round,
-                    raceName = race.raceName,
-                    date = race.date,
-                    winnerId = winner.driverId,
-                    winnerName = "${winner.givenName} ${winner.familyName}",
-                    constructor = constructor.name,
-                )
+                try {
+                    SeasonDetail(
+                        season = season,
+                        round = race.round,
+                        raceName = race.raceName,
+                        date = race.date,
+                        winnerId = winner.driverId,
+                        winnerName = "${winner.givenName} ${winner.familyName}",
+                        constructor = constructor.name,
+                    )
+                } catch (e: IllegalArgumentException) {
+                    logger.warn("⚠️ Invalid season detail data for season=$season round=${race.round}: ${e.message}")
+                    null
+                }
             }
         } catch (ex: Exception) {
             logger.warn("⚠️ Failed to parse season details for $season: ${ex.message}")

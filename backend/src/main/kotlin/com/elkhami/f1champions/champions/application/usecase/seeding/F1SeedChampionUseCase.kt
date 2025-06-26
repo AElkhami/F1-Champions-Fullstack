@@ -3,6 +3,7 @@ package com.elkhami.f1champions.champions.application.usecase.seeding
 import com.elkhami.f1champions.champions.domain.service.ChampionsClient
 import com.elkhami.f1champions.champions.domain.service.ChampionsService
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
+import com.elkhami.f1champions.core.network.ApiResponse
 import org.springframework.stereotype.Component
 
 @Component
@@ -34,13 +35,24 @@ class F1SeedChampionUseCase(
         season: String,
         forced: Boolean,
     ) {
-        championsClient.fetchChampion(season.toInt())?.let {
-            championsService.saveChampion(it)
-            if (forced) {
-                logger.info("🔄 Forcefully refreshed champion for $season")
-            } else {
-                logger.info("✅ Saved champion for $season")
+        when (val response = championsClient.fetchChampion(season.toInt())) {
+            is ApiResponse.Success -> {
+                response.data?.let { champion ->
+                    try {
+                        championsService.saveChampion(champion)
+                        if (forced) {
+                            logger.info("🔄 Forcefully refreshed champion for $season")
+                        } else {
+                            logger.info("✅ Saved champion for $season")
+                        }
+                    } catch (e: Exception) {
+                        logger.error("❌ Failed to save champion for $season: ${e.message}")
+                    }
+                } ?: logger.warn("⚠️ No champion data found for $season")
             }
-        } ?: logger.warn("⚠️ No champion data found for $season")
+            is ApiResponse.Error -> {
+                logger.error("❌ Failed to fetch champion for $season: ${response.message}")
+            }
+        }
     }
 }
