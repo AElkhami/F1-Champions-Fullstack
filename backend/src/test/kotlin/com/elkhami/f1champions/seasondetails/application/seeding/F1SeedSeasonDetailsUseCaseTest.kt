@@ -1,5 +1,6 @@
 package com.elkhami.f1champions.seasondetails.application.seeding
 
+import com.elkhami.f1champions.core.network.ApiResponse
 import com.elkhami.f1champions.seasondetails.application.usecase.seeding.F1SeedSeasonDetailsUseCase
 import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsClient
@@ -73,7 +74,7 @@ class F1SeedSeasonDetailsUseCaseTest {
                 )
 
             every { seasonDetailsService.findDetailsBySeason(season) } returns emptyList()
-            coEvery { seasonDetailsClient.fetchSeasonDetails(season) } returns listOf(detail)
+            coEvery { seasonDetailsClient.fetchSeasonDetails(season) } returns ApiResponse.success(listOf(detail))
             every { seasonDetailsService.saveSeasonDetails(any()) } just Runs
             every { seasonDetailsService.evictSeasonCache(season) } just Runs
 
@@ -86,12 +87,12 @@ class F1SeedSeasonDetailsUseCaseTest {
         }
 
     @Test
-    fun `seedIfMissing does nothing when client returns empty list`() =
+    fun `seedIfMissing does nothing when client returns error`() =
         runTest {
             val season = "2022"
 
             every { seasonDetailsService.findDetailsBySeason(season) } returns emptyList()
-            coEvery { seasonDetailsClient.fetchSeasonDetails(season) } returns emptyList()
+            coEvery { seasonDetailsClient.fetchSeasonDetails(season) } returns ApiResponse.error("API Error")
 
             seeder.seedIfMissing(2022)
 
@@ -117,7 +118,7 @@ class F1SeedSeasonDetailsUseCaseTest {
                     constructor = "Red Bull",
                 )
 
-            coEvery { seasonDetailsClient.fetchSeasonDetails(season) } returns listOf(detail)
+            coEvery { seasonDetailsClient.fetchSeasonDetails(season) } returns ApiResponse.success(listOf(detail))
             every { seasonDetailsService.saveSeasonDetails(any()) } just Runs
             every { seasonDetailsService.evictSeasonCache(season) } just Runs
 

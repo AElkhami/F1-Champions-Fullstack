@@ -1,6 +1,6 @@
 package com.elkhami.f1champions.seasondetails.infrastructure.api
 
-import com.elkhami.f1champions.champions.domain.model.Champion
+import com.elkhami.f1champions.core.network.ApiResponse
 import com.elkhami.f1champions.core.resilience.CompositeResiliencePolicy
 import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsParser
@@ -88,9 +88,9 @@ class F1SeasonDetailsClientTest {
             val json = """{ "mock": "response" }"""
 
             coEvery {
-                resiliencePolicy.execute<List<Champion>>(any())
+                resiliencePolicy.execute<List<SeasonDetail>?>(any())
             } coAnswers {
-                firstArg<suspend () -> List<Champion>>().invoke()
+                firstArg<suspend () -> List<SeasonDetail>?>().invoke()
             }
             every { responseSpec.bodyToMono(String::class.java) } returns Mono.just(json)
             every { parser.parseSeasonDetails("2021", json) } returns listOf(expected)
@@ -98,17 +98,20 @@ class F1SeasonDetailsClientTest {
             val result = client.fetchSeasonDetails("2021")
 
             assertNotNull(result)
-            assertEquals(expected, result.first())
+            assert(result is ApiResponse.Success)
+            val data = (result as ApiResponse.Success).data
+            assertNotNull(data)
+            assertEquals(expected, data.first())
         }
 
     @Test
-    fun `fetchSeasonDetails returns empty list on failure`() =
+    fun `fetchSeasonDetails returns error response on failure`() =
         runTest {
             every { responseSpec.bodyToMono(String::class.java) } throws RuntimeException("API failure")
 
             val result = client.fetchSeasonDetails("2022")
 
             assertNotNull(result)
-            assert(result.isEmpty())
+            assert(result is ApiResponse.Error)
         }
 }

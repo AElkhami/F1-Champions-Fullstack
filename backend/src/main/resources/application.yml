@@ -54,6 +54,8 @@ logging:
 f1:
   api:
     base-url: https://api.jolpi.ca/ergast/api/f1
+    response-timeout: 5
+    connection-timeout: 3000
 
 resilience4j:
   circuitbreaker:

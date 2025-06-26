@@ -32,7 +32,8 @@ class ChampionRepositoryAdapter(
     }
 
     override fun evictSeasonCache(season: String) {
-        cacheManager.getCache(CHAMPIONS_CACHE)?.clear()
+        val cache = cacheManager.getCache(CHAMPIONS_CACHE)
+        cache?.evict(season)
         logger.info("🧹 Evicted Champion cache for season: $season")
     }
 

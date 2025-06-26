@@ -1,6 +1,7 @@
 package com.elkhami.f1champions.seasondetails.intrastructure.api
 
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
+import com.elkhami.f1champions.core.network.ApiResponse
 import com.elkhami.f1champions.core.resilience.CompositeResiliencePolicy
 import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsClient
@@ -17,7 +18,7 @@ class F1SeasonDetailsClient(
 ) : SeasonDetailsClient {
     private val logger = loggerWithPrefix()
 
-    override suspend fun fetchSeasonDetails(season: String): List<SeasonDetail>? {
+    override suspend fun fetchSeasonDetails(season: String): ApiResponse<List<SeasonDetail>?> {
         return runCatching {
             resiliencePolicy.execute {
                 fetchFromApi(season)?.let { json ->
@@ -26,10 +27,15 @@ class F1SeasonDetailsClient(
                     }
                 }
             }
-        }.getOrElse {
-            logger.warn("⚠️ Failed to fetch details for $season: ${it.message}")
-            emptyList()
-        }
+        }.fold(
+            onSuccess = { seasonDetails ->
+                ApiResponse.success(seasonDetails)
+            },
+            onFailure = { exception ->
+                logger.warn("⚠️ Failed to fetch details for $season: ${exception.message}")
+                ApiResponse.error("Failed to fetch details for $season", exception)
+            },
+        )
     }
 
     internal suspend fun fetchFromApi(season: String): String? {

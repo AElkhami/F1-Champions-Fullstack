@@ -1,4 +1,4 @@
-package com.elkhami.f1champions.core.seeding
+package com.elkhami.f1champions.core.refresh
 
 import com.elkhami.f1champions.core.startup.AppStartupOrchestrator
 import io.mockk.coVerify
@@ -7,16 +7,16 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.time.Year
 
-class SeedingServiceTest {
+class RefreshServiceTest {
     private val orchestrator = mockk<AppStartupOrchestrator>(relaxed = true)
-    private val seedingService = SeedingService(orchestrator)
+    private val refreshService = RefreshService(orchestrator)
 
     @Test
     fun `refreshCurrentSeason calls orchestrator with current year`() =
         runTest {
             val currentYear = Year.now().value
 
-            seedingService.refreshCurrentSeason()
+            refreshService.refreshCurrentSeason()
 
             coVerify { orchestrator.refreshChampion(currentYear) }
             coVerify { orchestrator.refreshSeasons(currentYear) }

@@ -1,6 +1,7 @@
 package com.elkhami.f1champions.seasondetails.application.usecase.seeding
 
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
+import com.elkhami.f1champions.core.network.ApiResponse
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsClient
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsService
 import org.springframework.stereotype.Component
@@ -32,13 +33,30 @@ class F1SeedSeasonDetailsUseCase(
     }
 
     private suspend fun fetchAndSaveSeasonDetails(season: String) {
-        val winners = seasonDetailsClient.fetchSeasonDetails(season)
-        if (winners.isNullOrEmpty()) {
-            logger.warn("⚠️ No season details found for $season")
-        } else {
-            winners.forEach { seasonDetailsService.saveSeasonDetails(it) }
-            seasonDetailsService.evictSeasonCache(season)
-            logger.info("✅ Saved ${winners.size} race winners for season $season")
+        when (val response = seasonDetailsClient.fetchSeasonDetails(season)) {
+            is ApiResponse.Success -> {
+                val winners = response.data
+                if (winners.isNullOrEmpty()) {
+                    logger.warn("⚠️ No season details found for $season")
+                } else {
+                    try {
+                        winners.forEach { seasonDetail ->
+                            try {
+                                seasonDetailsService.saveSeasonDetails(seasonDetail)
+                            } catch (e: Exception) {
+                                logger.error("❌ Failed to save season detail for $season round ${seasonDetail.round}: ${e.message}")
+                            }
+                        }
+                        seasonDetailsService.evictSeasonCache(season)
+                        logger.info("✅ Saved ${winners.size} race winners for season $season")
+                    } catch (e: Exception) {
+                        logger.error("❌ Failed to process season details for $season: ${e.message}")
+                    }
+                }
+            }
+            is ApiResponse.Error -> {
+                logger.error("❌ Failed to fetch season details for $season: ${response.message}")
+            }
         }
     }
 }

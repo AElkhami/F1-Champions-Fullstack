@@ -4,6 +4,7 @@ import com.elkhami.f1champions.champions.domain.model.Champion
 import com.elkhami.f1champions.champions.domain.service.ChampionParser
 import com.elkhami.f1champions.champions.domain.service.ChampionsClient
 import com.elkhami.f1champions.core.logger.loggerWithPrefix
+import com.elkhami.f1champions.core.network.ApiResponse
 import com.elkhami.f1champions.core.resilience.CompositeResiliencePolicy
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
@@ -17,7 +18,7 @@ class F1ChampionsClient(
 ) : ChampionsClient {
     private val logger = loggerWithPrefix()
 
-    override suspend fun fetchChampion(year: Int): Champion? {
+    override suspend fun fetchChampion(year: Int): ApiResponse<Champion?> {
         return runCatching {
             resiliencePolicy.execute {
                 fetchFromApi(year)?.let { json ->
@@ -26,10 +27,15 @@ class F1ChampionsClient(
                     }
                 }
             }
-        }.getOrElse {
-            logger.warn("⚠️ Failed to fetch champion for $year: ${it.message}")
-            null
-        }
+        }.fold(
+            onSuccess = { champion ->
+                ApiResponse.success(champion)
+            },
+            onFailure = { exception ->
+                logger.warn("⚠️ Failed to fetch champion for $year: ${exception.message}")
+                ApiResponse.error("Failed to fetch champion for $year", exception)
+            },
+        )
     }
 
     internal suspend fun fetchFromApi(year: Int): String? {

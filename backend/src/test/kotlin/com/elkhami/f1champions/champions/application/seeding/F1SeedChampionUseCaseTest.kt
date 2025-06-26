@@ -4,6 +4,7 @@ import com.elkhami.f1champions.champions.application.usecase.seeding.F1SeedChamp
 import com.elkhami.f1champions.champions.domain.model.Champion
 import com.elkhami.f1champions.champions.domain.service.ChampionsClient
 import com.elkhami.f1champions.champions.domain.service.ChampionsService
+import com.elkhami.f1champions.core.network.ApiResponse
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -64,7 +65,7 @@ class F1SeedChampionUseCaseTest {
                 )
 
             every { championsService.findChampionsBySeason(season) } returns null
-            coEvery { championsClient.fetchChampion(year) } returns champion
+            coEvery { championsClient.fetchChampion(year) } returns ApiResponse.success(champion)
             every { championsService.saveChampion(any()) } just Runs
 
             seeder.seedIfMissing(year)
@@ -75,13 +76,13 @@ class F1SeedChampionUseCaseTest {
         }
 
     @Test
-    fun `seedIfMissing does nothing if client returns null`() =
+    fun `seedIfMissing does nothing if client returns error`() =
         runTest {
             val year = 2019
             val season = year.toString()
 
             every { championsService.findChampionsBySeason(season) } returns null
-            coEvery { championsClient.fetchChampion(year) } returns null
+            coEvery { championsClient.fetchChampion(year) } returns ApiResponse.error("API Error")
 
             seeder.seedIfMissing(year)
 
@@ -104,7 +105,7 @@ class F1SeedChampionUseCaseTest {
                     constructor = "Ferrari",
                 )
 
-            coEvery { championsClient.fetchChampion(year) } returns champion
+            coEvery { championsClient.fetchChampion(year) } returns ApiResponse.success(champion)
             every { championsService.saveChampion(any()) } just Runs
 
             seeder.forceRefresh(year)
