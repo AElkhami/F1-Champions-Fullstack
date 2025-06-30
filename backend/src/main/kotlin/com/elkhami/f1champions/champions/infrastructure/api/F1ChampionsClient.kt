@@ -16,7 +16,7 @@ class F1ChampionsClient(
     private val resiliencePolicy: CompositeResiliencePolicy,
     private val parser: ChampionParser,
 ) : ChampionsClient {
-    private val logger = loggerWithPrefix()
+    private val logger = this.loggerWithPrefix()
 
     override suspend fun fetchChampion(year: Int): ApiResponse<Champion?> {
         return runCatching {

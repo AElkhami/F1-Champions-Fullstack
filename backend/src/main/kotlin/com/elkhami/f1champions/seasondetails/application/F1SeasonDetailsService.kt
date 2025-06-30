@@ -3,6 +3,7 @@ package com.elkhami.f1champions.seasondetails.application
 import com.elkhami.f1champions.seasondetails.domain.SeasonDetailsRepository
 import com.elkhami.f1champions.seasondetails.domain.model.SeasonDetail
 import com.elkhami.f1champions.seasondetails.domain.service.SeasonDetailsService
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 
 @Service
@@ -13,6 +14,7 @@ class F1SeasonDetailsService(
         return seasonDetailsRepository.findBySeason(season)
     }
 
+    @Transactional
     override fun saveSeasonDetails(seasonDetail: SeasonDetail) {
         seasonDetailsRepository.deleteBySeasonAndRound(
             seasonDetail.season,

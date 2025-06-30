@@ -36,22 +36,6 @@ class AppStartupOrchestrator(
         logger.info("✅ Seeding completed: $successCount successful, $failureCount failed")
     }
 
-    suspend fun seedChampions(year: Int) {
-        runCatching {
-            seedChampionUseCase.seedIfMissing(year)
-        }.onFailure {
-            logger.error("❌ Error seeding champion for year $year, ${it.message}")
-        }
-    }
-
-    suspend fun seedSeasons(year: Int) {
-        runCatching {
-            seedSeasonDetailsUseCase.seedIfMissing(year)
-        }.onFailure {
-            logger.error("❌ Error seeding season details for year $year, ${it.message}")
-        }
-    }
-
     private suspend fun seedChampionsWithRetry(
         year: Int,
         maxRetries: Int = 3,

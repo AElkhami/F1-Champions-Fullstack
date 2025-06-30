@@ -66,17 +66,6 @@ class AppStartupOrchestratorTest {
         }
 
     @Test
-    fun `seedSeasons logs error when seeding season details fails`() =
-        runTest {
-            val year = 2025
-            coEvery { seedSeasonDetailsUseCase.seedIfMissing(year) } throws RuntimeException("Failed to seed season details")
-
-            orchestrator.seedSeasons(year)
-
-            coVerify { seedSeasonDetailsUseCase.seedIfMissing(year) }
-        }
-
-    @Test
     fun `refreshChampion delegates to championSeeder forceRefresh`() =
         runTest {
             val year = 2023
