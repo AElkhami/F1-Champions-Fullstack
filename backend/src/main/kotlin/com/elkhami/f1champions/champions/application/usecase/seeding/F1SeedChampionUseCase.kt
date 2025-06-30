@@ -19,32 +19,26 @@ class F1SeedChampionUseCase(
             logger.info("⏭️ Champion for $season already exists.")
             return
         }
-        fetchAndSaveChampion(season, forced = false)
+        fetchAndSaveChampion(season)
+        logger.info("✅ Saved champion for $season")
     }
 
     override suspend fun forceRefresh(year: Int) {
         val season = year.toString()
-        fetchAndSaveChampion(season, forced = true)
+        fetchAndSaveChampion(season)
+        logger.info("🔄 Forcefully refreshed champion for $season")
     }
 
     private fun championExists(season: String): Boolean {
         return championsService.findChampionsBySeason(season) != null
     }
 
-    private suspend fun fetchAndSaveChampion(
-        season: String,
-        forced: Boolean,
-    ) {
+    private suspend fun fetchAndSaveChampion(season: String) {
         when (val response = championsClient.fetchChampion(season.toInt())) {
             is ApiResponse.Success -> {
                 response.data?.let { champion ->
                     try {
                         championsService.saveChampion(champion)
-                        if (forced) {
-                            logger.info("🔄 Forcefully refreshed champion for $season")
-                        } else {
-                            logger.info("✅ Saved champion for $season")
-                        }
                     } catch (e: Exception) {
                         logger.error("❌ Failed to save champion for $season: ${e.message}")
                     }
