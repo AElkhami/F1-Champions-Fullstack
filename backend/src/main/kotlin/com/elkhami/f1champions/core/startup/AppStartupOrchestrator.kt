@@ -76,46 +76,6 @@ class AppStartupOrchestrator(
         return false
     }
 
-    private suspend fun seedChampionsWithRetry(
-        year: Int,
-        maxRetries: Int = 3,
-    ): Boolean {
-        repeat(maxRetries) { attempt ->
-            try {
-                seedChampionUseCase.seedIfMissing(year)
-                return true
-            } catch (e: Exception) {
-                logger.warn("⚠️ Attempt ${attempt + 1} failed for champion year $year: ${e.message}")
-                if (attempt < maxRetries - 1) {
-                    val delayMs = (1000L * (attempt + 1)) // Exponential backoff: 1s, 2s, 3s
-                    delay(delayMs)
-                }
-            }
-        }
-        logger.error("❌ Failed to seed champion for year $year after $maxRetries attempts")
-        return false
-    }
-
-    private suspend fun seedSeasonsWithRetry(
-        year: Int,
-        maxRetries: Int = 3,
-    ): Boolean {
-        repeat(maxRetries) { attempt ->
-            try {
-                seedSeasonDetailsUseCase.seedIfMissing(year)
-                return true
-            } catch (e: Exception) {
-                logger.warn("⚠️ Attempt ${attempt + 1} failed for season details year $year: ${e.message}")
-                if (attempt < maxRetries - 1) {
-                    val delayMs = (1000L * (attempt + 1)) // Exponential backoff: 1s, 2s, 3s
-                    delay(delayMs)
-                }
-            }
-        }
-        logger.error("❌ Failed to seed season details for year $year after $maxRetries attempts")
-        return false
-    }
-
     suspend fun refreshChampion(year: Int) {
         runCatching {
             seedChampionUseCase.forceRefresh(year)
